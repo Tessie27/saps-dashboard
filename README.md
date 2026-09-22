@@ -13,6 +13,7 @@ Built from the `2024-2025 Annual (Financial Year)` SAPS workbook, covering 10 fi
 - **National trend** - 10-year line chart of recorded crime totals
 - **Province and crime-category breakdowns** - bar charts and a category-group donut chart
 - **Police station leaderboard** - sortable, searchable, province-filterable table of the highest-volume stations with year-on-year deltas
+- **Gender breakdown** - a separate section built from Stats SA's Victims of Crime Survey (P0341, 2025/26): male vs female victims by crime category, a per-crime trend explorer, safety-perception trends, and an intimate-partner-violence callout. This is household-survey data, not SAPS recorded crime, and isn't directly comparable to the figures above it - the dashboard calls this out.
 - Light/dark theme support
 
 ## Tech

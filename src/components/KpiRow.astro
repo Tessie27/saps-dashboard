@@ -1,0 +1,24 @@
+---
+interface Kpi {
+  label: string;
+  value: string;
+  note: string;
+  deltaClass?: 'up' | 'down';
+  valueClass?: 'up' | 'down';
+}
+interface Props {
+  kpis: Kpi[];
+  fourUp?: boolean;
+}
+const { kpis, fourUp = false } = Astro.props;
+---
+<div class={`kpi-row${fourUp ? ' kpi-row-4' : ''}`}>
+  {kpis.map((k) => (
+    <div class="kpi">
+      <div class="label">{k.label}</div>
+      <div class="value" style={k.valueClass ? `color:var(--${k.valueClass === 'up' ? 'bad' : 'good'})` : undefined}>{k.value}</div>
+      {k.deltaClass && <div class={`delta ${k.deltaClass}`}>{k.value} vs prior year</div>}
+      <div class="note">{k.note}</div>
+    </div>
+  ))}
+</div>

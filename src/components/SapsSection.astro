@@ -1,0 +1,75 @@
+<div id="sapsSection"></div>
+<div class="grid">
+  <div class="card" id="mapCard">
+    <div class="card-head">
+      <div>
+        <h2>Crime hotspot map  -  2024/25</h2>
+        <div class="cardsub">Bubble size &amp; color = recorded crime volume by province. Orange dots = highest-volume metro stations.</div>
+      </div>
+      <div class="seg" id="mapMode">
+        <button data-m="total" class="active">Total</button>
+        <button data-m="rate">Per 100k pop.</button>
+      </div>
+    </div>
+    <div class="map-wrap chart-wrap">
+      <svg id="mapSvg" viewBox="0 0 760 700"></svg>
+      <div class="map-tip" id="mapTip"></div>
+    </div>
+    <div class="map-legend">
+      <span>Low</span><span class="legend-ramp"></span><span>High</span>
+      <span style="margin-left:14px;">
+        <span class="sw" style="background:var(--series-2); border-radius:50%; width:8px;height:8px; display:inline-block;"></span>
+        Metro station
+      </span>
+      <button class="clearbtn" id="mapClear" style="margin-left:auto; display:none;">Clear selection</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>National trend  -  FY2015/16 to FY2024/25</h2>
+        <div class="cardsub">17 community-reported serious crimes, national total per financial year.</div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <svg id="trendSvg" viewBox="0 0 520 260"></svg>
+      <div class="tooltip" id="trendTip"></div>
+    </div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2 id="provBarTitle">Crime by province  -  2024/25</h2>
+        <div class="cardsub" id="provBarSub">Sorted by total recorded crimes. Click a bar to select that province.</div>
+      </div>
+      <button class="clearbtn" id="provClear" style="display:none;">Clear selection</button>
+    </div>
+    <div class="chart-wrap">
+      <svg id="provSvg" viewBox="0 0 620 340"></svg>
+      <div class="tooltip" id="provTip"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Crime category mix  -  2024/25</h2>
+    <div class="cardsub">National totals grouped by SAPS crime category, latest financial year.</div>
+    <div class="chart-wrap">
+      <svg id="groupSvg" viewBox="0 0 300 300"></svg>
+      <div class="tooltip" id="groupTip"></div>
+    </div>
+    <div class="legend" id="groupLegend"></div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:16px;">
+  <h2>Top crime categories  -  national, 2024/25</h2>
+  <div class="cardsub">Highest-volume individual crime types across all stations.</div>
+  <div class="chart-wrap">
+    <svg id="catSvg" viewBox="0 0 900 460"></svg>
+    <div class="tooltip" id="catTip"></div>
+  </div>
+</div>

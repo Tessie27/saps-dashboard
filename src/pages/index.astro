@@ -1,0 +1,29 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import SapsSection from '../components/SapsSection.astro';
+import GenderSection from '../components/GenderSection.astro';
+import StationTable from '../components/StationTable.astro';
+import Footer from '../components/Footer.astro';
+import sapsData from '../data/saps.json';
+
+const srcLine = `SAPS source: ${sapsData.meta.source}  -  ${sapsData.meta.file} | Coverage: ${sapsData.meta.coverage} | ${sapsData.meta.station_count} stations. Gender data: Stats SA P0341, Victims of Crime Survey 2025/26.`;
+---
+<Layout title="South Africa Crime Dashboard">
+  <div class="wrap">
+    <Header srcLine={srcLine} />
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <SapsSection />
+
+    <GenderSection />
+
+    <StationTable />
+
+    <Footer firstYear={sapsData.years[0]} latestYear={sapsData.meta.latest_year} />
+  </div>
+</Layout>
+
+<script>
+  import '../scripts/dashboard.js';
+</script>

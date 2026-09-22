@@ -1,0 +1,24 @@
+---
+interface Props {
+  srcLine: string;
+}
+const { srcLine } = Astro.props;
+---
+<header class="top">
+  <div>
+    <h1>South Africa Crime Dashboard</h1>
+    <div class="sub">Two official sources side by side: SAPS recorded crime (reported to police, by station and province) and Stats SA's Victims of Crime Survey (household interviews, including a sex breakdown). Click a province on the map or in the chart to drill in.</div>
+    <div class="src">{srcLine}</div>
+  </div>
+  <div class="theme-toggle" id="themeToggle">
+    <button data-t="light">Light</button>
+    <button data-t="dark">Dark</button>
+    <button data-t="system" class="active">System</button>
+  </div>
+</header>
+
+<nav class="jump">
+  <a href="#sapsSection">SAPS recorded crime</a>
+  <a href="#genderSection">Gender breakdown (Stats SA)</a>
+  <a href="#stationTable">Station leaderboard</a>
+</nav>

@@ -1,0 +1,67 @@
+<div class="sect-divider" id="genderSection">
+  <div class="kicker">Stats SA &middot; Victims of Crime Survey 2025/26</div>
+  <h2>Who experiences crime, by sex</h2>
+  <div class="cardsub" style="margin-bottom:0;">SAPS station data above counts crimes reported to police. This section comes from a separate household survey that also captures unreported crime, and breaks it down by sex.</div>
+</div>
+
+<div class="kpi-row kpi-row-4" id="genderKpiRow"></div>
+
+<div class="grid">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>Gap by crime category  -  2025/26</h2>
+        <div class="cardsub">Estimated victims, thousands. Sorted by the size of the gap between men and women.</div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <svg id="genderGapSvg" viewBox="0 0 620 400"></svg>
+      <div class="tooltip" id="genderGapTip"></div>
+    </div>
+    <div class="legend">
+      <span class="li"><span class="sw" style="background:var(--series-1)"></span>Male</span>
+      <span class="li"><span class="sw" style="background:var(--series-2)"></span>Female</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>Trend by crime type</h2>
+        <div class="cardsub">2018/19 to 2025/26. Select a category.</div>
+      </div>
+      <select class="provsel" id="genderCrimeSelect"></select>
+    </div>
+    <div class="chart-wrap">
+      <svg id="genderTrendSvg" viewBox="0 0 520 260"></svg>
+      <div class="tooltip" id="genderTrendTip"></div>
+    </div>
+    <div class="legend">
+      <span class="li"><span class="sw" style="background:var(--series-1)"></span>Male</span>
+      <span class="li"><span class="sw" style="background:var(--series-2)"></span>Female</span>
+    </div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Feel "very unsafe" walking alone after dark</h2>
+    <div class="cardsub">Percentage of individuals 16+, by sex, 2021/22 to 2025/26.</div>
+    <div class="chart-wrap">
+      <svg id="safetySvg" viewBox="0 0 520 220"></svg>
+      <div class="tooltip" id="safetyTip"></div>
+    </div>
+    <div class="legend">
+      <span class="li"><span class="sw" style="background:var(--series-1)"></span>Male</span>
+      <span class="li"><span class="sw" style="background:var(--series-2)"></span>Female</span>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Assault by a spouse or partner</h2>
+    <div class="cardsub">Share of assault victims who named the attacker as a spouse or intimate partner, 2025/26.</div>
+    <div class="callout">
+      <div class="big">31.4% <span style="font-size:13px; font-weight:400; color:var(--text-muted);">women</span><br /><span style="font-size:26px; color:var(--series-1);">2.2%</span> <span style="font-size:13px; font-weight:400; color:var(--text-muted);">men</span></div>
+      <p>Men are assaulted more often overall (see the gap chart), but women's assaults are far more likely to happen at the hands of a spouse or intimate partner &mdash; a 14&times; gap on this one measure.</p>
+    </div>
+  </div>
+</div>

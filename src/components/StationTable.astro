@@ -1,0 +1,30 @@
+<div class="card" id="stationTable">
+  <div class="card-head">
+    <div>
+      <h2>Police station leaderboard</h2>
+      <div class="cardsub">Top recorded-crime stations nationally, FY2024/25 vs FY2023/24. Click column headers to sort.</div>
+    </div>
+  </div>
+  <div class="table-tools">
+    <input class="search" id="stationSearch" placeholder="Search station, district..." />
+    <select class="provsel" id="provFilter"><option value="">All provinces</option></select>
+    <span class="table-note" id="tableCount" style="margin-left:auto;"></span>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th data-k="rank">#</th>
+          <th data-k="station">Station</th>
+          <th data-k="province">Province</th>
+          <th data-k="district">District</th>
+          <th class="num" data-k="total_2024_25">2024/25</th>
+          <th class="num" data-k="total_2023_24">2023/24</th>
+          <th class="num" data-k="pct_change">YoY</th>
+        </tr>
+      </thead>
+      <tbody id="stationBody"></tbody>
+    </table>
+  </div>
+  <div class="table-note">Ranked by total of the 17 community-reported serious crime categories recorded at that station in FY2024/25.</div>
+</div>

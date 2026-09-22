@@ -18,10 +18,22 @@ Built from the `2024-2025 Annual (Financial Year)` SAPS workbook, covering 10 fi
 
 ## Tech
 
-Static HTML/CSS/JavaScript with no build step and no external runtime dependencies - the page (`index.html`) loads its data from a bundled `data.json`. Hosted via GitHub Pages from the repository root.
+Built with [Astro](https://astro.build) - static output, no client framework/hydration. Layout, KPI tiles, and each chart's markup live in `src/components/`; the interactive SVG rendering (map, bars, lines, donut, sortable table) is one client script at `src/scripts/dashboard.js`, imported as an ES module on the page.
+
+```
+src/
+  layouts/Layout.astro       page shell + design tokens (light/dark)
+  components/                Header, KpiRow, SapsSection, GenderSection, StationTable, Footer
+  scripts/dashboard.js       chart/map/table rendering + interactivity
+  data/saps.json             processed SAPS extract (imported at build time)
+  data/gender.js             Stats SA gender-breakdown data
+  pages/index.astro          assembles everything
+```
+
+`npm install` then `npm run build` outputs static files to `docs/`, which is what GitHub Pages serves (repo Pages source: `main` branch, `/docs` folder). `npm run dev` runs a local dev server; `npm run preview` serves the built `docs/` output.
 
 ## Data
 
-Source data lives in [`SAPS Master Data/`](./SAPS%20Master%20Data), the raw SAPS quarterly and annual crime statistics workbooks. `data.json` is a processed/aggregated extract used by the dashboard.
+Source data lives in [`SAPS Master Data/`](./SAPS%20Master%20Data), the raw SAPS quarterly and annual crime statistics workbooks. `src/data/saps.json` is a processed/aggregated extract used by the dashboard, bundled into the build rather than fetched at runtime.
 
 Per-100,000 population rates use approximate Stats SA mid-year provincial population estimates and are for relative comparison only.

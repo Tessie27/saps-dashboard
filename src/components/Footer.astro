@@ -1,0 +1,12 @@
+---
+interface Props {
+  firstYear: string;
+  latestYear: string;
+}
+const { firstYear, latestYear } = Astro.props;
+---
+<footer>
+  SAPS figures are official recorded-crime statistics (the "17 community-reported serious crimes" series unless noted) at station, provincial and national level, FY{firstYear} to FY{latestYear}.<br />
+  Per-100,000 rates use Stats SA mid-year provincial population estimates (approximate) and are for relative comparison only. Map station markers are shown only for major metro stations with known coordinates; all other stations appear in the leaderboard table below.<br />
+  Gender breakdown is from a different source: Statistics South Africa, P0341 &mdash; Victims of Crime Survey / Governance, Public Safety and Justice Survey (GPSJS) 2025/26, published 1 September 2026, a household interview survey that also captures crime never reported to police. Household-crime figures are broken down by the sex of the household head; individual-crime figures by the sex of the person affected. It is not directly comparable to the SAPS recorded-crime totals above.
+</footer>

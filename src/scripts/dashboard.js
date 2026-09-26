@@ -230,17 +230,27 @@ function renderTrend(d) {
     gridHtml += '<text class="axis-label" x="' + (M.l - 8) + '" y="' + (yy + 3) + '" text-anchor="end">' + Math.round(v / 1000) + 'k</text>';
   }
   let xlabels = '';
+  const maxLabels = W < MOBILE ? 5 : years.length;
+  const step = Math.max(1, Math.ceil((years.length - 1) / (maxLabels - 1)));
+  const idxs = [];
+  for (let i = 0; i < years.length; i += step) idxs.push(i);
+  const lastIdx = years.length - 1;
+  if (idxs[idxs.length - 1] !== lastIdx) {
+    if (idxs.length > 1 && lastIdx - idxs[idxs.length - 1] < step / 2) idxs.pop();
+    idxs.push(lastIdx);
+  }
+  const shownYears = new Set(idxs);
   years.forEach((yr, i) => {
-    if (i % 2 === 0 || i === years.length - 1) {
-      xlabels += '<text class="axis-label" x="' + x(i) + '" y="' + (H - 10) + '" text-anchor="middle">' + yr.slice(2, 4) + '/' + yr.slice(7, 9) + '</text>';
-    }
+    if (!shownYears.has(i)) return;
+    xlabels += '<text class="axis-label" x="' + x(i) + '" y="' + (H - 10) + '" text-anchor="middle">' + yr.slice(2, 4) + '/' + yr.slice(7, 9) + '</text>';
   });
 
   const pathD = vals.map((v, i) => (i === 0 ? 'M' : 'L') + x(i).toFixed(1) + ',' + y(v).toFixed(1)).join(' ');
   const areaD = pathD + ' L ' + x(vals.length - 1).toFixed(1) + ',' + (H - M.b) + ' L ' + x(0).toFixed(1) + ',' + (H - M.b) + ' Z';
   const dotsHtml = vals.map((v, i) => '<circle class="hover-dot" cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="3.5" fill="var(--series-1)"></circle>').join('');
 
-  const axisTitle = '<text class="axis-title" x="' + M.l + '" y="12">Crimes recorded (17 community-reported serious crimes)</text>';
+  const axisTitleText = W < MOBILE ? 'Crimes recorded' : 'Crimes recorded (17 community-reported serious crimes)';
+  const axisTitle = '<text class="axis-title" x="' + M.l + '" y="12">' + axisTitleText + '</text>';
 
   // annotate the FY2020/21 dip - the year South Africa's COVID-19 lockdown
   // sharply suppressed reported crime - so the chart reads as a story, not
@@ -718,3 +728,30 @@ window.addEventListener('resize', () => {
     renderSafety();
   }, 200);
 });
+
+// back-to-top button
+const backToTop = document.getElementById('backToTop');
+if (backToTop) {
+  window.addEventListener('scroll', () => {
+    backToTop.classList.toggle('visible', window.scrollY > 600);
+  });
+  backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+}
+
+// scroll-spy: highlight whichever section's anchor is currently in view,
+// across both the side nav and the top jump-nav
+(function initScrollSpy() {
+  const navLinks = document.querySelectorAll('.side-nav a, nav.jump a');
+  if (!navLinks.length) return;
+  const hrefs = new Set([...navLinks].map((a) => a.getAttribute('href')));
+  const sections = [...hrefs].map((h) => document.querySelector(h)).filter(Boolean);
+  if (!sections.length) return;
+  const setActive = (id) => {
+    navLinks.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+  };
+  const observer = new IntersectionObserver(
+    (entries) => entries.forEach((e) => { if (e.isIntersecting) setActive(e.target.id); }),
+    { rootMargin: '-15% 0px -70% 0px', threshold: 0 }
+  );
+  sections.forEach((s) => observer.observe(s));
+})();

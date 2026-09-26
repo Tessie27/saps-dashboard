@@ -10,6 +10,16 @@ import sapsData from '../data/saps.json';
 const srcLine = `SAPS source: ${sapsData.meta.source}  -  ${sapsData.meta.file} | Coverage: ${sapsData.meta.coverage} | ${sapsData.meta.station_count} stations. Gender data: Stats SA P0341, Victims of Crime Survey 2025/26.`;
 ---
 <Layout title="South Africa Crime Dashboard">
+  <nav class="side-nav" id="sideNav">
+    <div class="side-nav-title">Jump to</div>
+    <a href="#kpiRow">Overview</a>
+    <a href="#mapCard">Hotspot map</a>
+    <a href="#trendCard">National trend</a>
+    <a href="#provCard">Province &amp; category</a>
+    <a href="#genderSection">Gender breakdown</a>
+    <a href="#stationTable">Station leaderboard</a>
+  </nav>
+  <button id="backToTop" aria-label="Back to top">↑ Top</button>
   <div class="wrap">
     <Header srcLine={srcLine} />
     <div class="kpi-row" id="kpiRow"></div>

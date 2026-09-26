@@ -135,7 +135,7 @@ const { title } = Astro.props;
   .baseline{stroke:var(--baseline); stroke-width:1;}
 
   #mapCard .card-head{margin-bottom:4px;}
-  .map-wrap{position:relative;}
+  .map-wrap{position:relative; overflow:hidden;}
   #mapSvg{width:100%; height:auto; display:block;}
   .prov-boundary{fill:var(--surface-1); stroke:var(--baseline); stroke-width:1.2; cursor:pointer; transition:stroke .15s, fill .15s;}
   .prov-boundary:hover{fill:var(--chip-bg);}
@@ -155,7 +155,7 @@ const { title } = Astro.props;
 
   .clearbtn{font-size:11px; color:var(--series-1); background:none; border:none; cursor:pointer; padding:0; text-decoration:underline; text-underline-offset:2px;}
 
-  .chart-wrap{position:relative;}
+  .chart-wrap{position:relative; overflow:hidden;}
   .tooltip{position:absolute; pointer-events:none; background:var(--surface-2); border:1px solid var(--border); border-radius:2px; padding:7px 10px; font-size:11.5px; box-shadow:0 4px 16px rgba(0,0,0,.18); opacity:0; transition:opacity .1s; white-space:nowrap; z-index:5;}
   .tooltip .tt-title{font-weight:600; margin-bottom:2px;}
   .tooltip .tt-row{display:flex; gap:8px; justify-content:space-between; color:var(--text-secondary);}

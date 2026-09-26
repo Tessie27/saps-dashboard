@@ -22,6 +22,20 @@ const srcLine = `SAPS source: ${sapsData.meta.source}  -  ${sapsData.meta.file} 
   <button id="backToTop" aria-label="Back to top">↑ Top</button>
   <div class="wrap">
     <Header srcLine={srcLine} />
+
+    <div class="filter-bar">
+      <div class="filter-bar-row">
+        <span class="filter-bar-label">Province:</span>
+        <span class="filter-bar-value" id="filterProvinceLabel">All provinces</span>
+        <button class="clearbtn" id="filterProvClear" style="display:none;">Clear</button>
+      </div>
+      <div class="filter-bar-row">
+        <span class="filter-bar-label">Year(s):</span>
+        <div class="year-picker" id="yearPicker"></div>
+        <button class="clearbtn" id="yearReset">Latest year only</button>
+      </div>
+    </div>
+
     <div class="kpi-row" id="kpiRow"></div>
 
     <SapsSection />

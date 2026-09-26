@@ -102,7 +102,11 @@ function buildMap(d) {
   }
 
   let html = '';
-  html += '<path class="za-outline" d="' + g.outline_path + ' ' + g.hole_path + '" fill-rule="evenodd"></path>';
+  d.province_summary.forEach((p) => {
+    const path = g.province_paths[p.province];
+    if (!path) return;
+    html += '<path class="prov-boundary" data-prov="' + p.province + '" d="' + path + '" fill-rule="evenodd"></path>';
+  });
 
   d.province_summary.forEach((p) => {
     const px = g.provinces_px[p.province];
@@ -150,14 +154,14 @@ function buildMap(d) {
     tip.style.opacity = 0;
   }
 
-  svg.querySelectorAll('.prov-g').forEach((elGroup) => {
-    const prov = elGroup.dataset.prov;
+  svg.querySelectorAll('.prov-g, .prov-boundary').forEach((el) => {
+    const prov = el.dataset.prov;
     const pdata = d.province_summary.find((p) => p.province === prov);
-    elGroup.addEventListener('mousemove', (e) => {
+    el.addEventListener('mousemove', (e) => {
       showTip(e, prov, ['Total FY' + d.meta.latest_year + ': ' + fmt(pdata.latest), 'YoY change: ' + fmtPct(pdata.pct_change), 'Per 100k pop.: ' + (pdata.per_100k ? fmt(pdata.per_100k) : ' - ')]);
     });
-    elGroup.addEventListener('mouseleave', hideTip);
-    elGroup.addEventListener('click', () => selectProvince(prov === state.selectedProvince ? null : prov));
+    el.addEventListener('mouseleave', hideTip);
+    el.addEventListener('click', () => selectProvince(prov === state.selectedProvince ? null : prov));
   });
   svg.querySelectorAll('.city-dot').forEach((dot) => {
     dot.addEventListener('mousemove', (e) => {
@@ -176,6 +180,9 @@ function applyMapSelection() {
   svg.querySelectorAll('.prov-bubble').forEach((b) => {
     const prov = b.parentElement.dataset.prov;
     b.classList.toggle('dim', !!(state.selectedProvince && prov !== state.selectedProvince));
+  });
+  svg.querySelectorAll('.prov-boundary').forEach((b) => {
+    b.classList.toggle('sel', b.dataset.prov === state.selectedProvince);
   });
   svg.querySelectorAll('.prov-label').forEach((l) => {
     l.classList.toggle('sel', l.dataset.lbl === state.selectedProvince);

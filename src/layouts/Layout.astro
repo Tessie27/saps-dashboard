@@ -5,7 +5,7 @@ interface Props {
 const { title } = Astro.props;
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -89,7 +89,7 @@ const { title } = Astro.props;
   @media (max-width:980px){ .grid > .card:nth-child(2){border-left:none; border-top:1px solid var(--border);} }
 
   .card{background:transparent; border:none; border-bottom:1px solid var(--border); border-radius:0; padding:18px 20px 20px;}
-  .card h2{font-size:12.5px; margin:0 0 2px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--text-secondary);}
+  .card h2{font-size:12.5px; margin:0 0 2px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--text-primary);}
   .card .cardsub{font-size:11px; color:var(--text-muted); margin-bottom:14px;}
   .card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;}
 
@@ -108,7 +108,9 @@ const { title } = Astro.props;
   #mapCard .card-head{margin-bottom:4px;}
   .map-wrap{position:relative;}
   #mapSvg{width:100%; height:auto; display:block;}
-  .za-outline{fill:var(--surface-1); stroke:var(--text-muted); stroke-width:1.4;}
+  .prov-boundary{fill:var(--surface-1); stroke:var(--baseline); stroke-width:1.2; cursor:pointer; transition:stroke .15s, fill .15s;}
+  .prov-boundary:hover{fill:var(--chip-bg);}
+  .prov-boundary.sel{stroke:var(--series-1); stroke-width:2.2;}
   .prov-bubble{cursor:pointer; stroke:var(--surface-1); stroke-width:1.5; transition:opacity .15s;}
   .prov-bubble:hover{opacity:.85;}
   .prov-bubble.dim{opacity:.28;}

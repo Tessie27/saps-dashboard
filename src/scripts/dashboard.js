@@ -26,6 +26,16 @@ function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
+// SVGs stretch to fill their container with no intrinsic width/height, so a
+// viewBox sized for desktop renders every font-size far too small on a phone.
+// Measuring the real rendered width and using it as the viewBox width keeps
+// 1 user-unit == 1 real CSS pixel at any screen size, so font sizes stay crisp.
+function renderWidth(svg, fallback) {
+  const w = svg.parentElement && svg.parentElement.getBoundingClientRect().width;
+  return w && w > 40 ? Math.round(w) : fallback;
+}
+const MOBILE = 480;
+
 function init(d) {
   renderKpis(d);
   buildMap(d);
@@ -112,10 +122,18 @@ function buildMap(d) {
     html += '<circle class="city-dot" data-city="' + city + '" data-total="' + (stn ? stn.total_2024_25 : '') + '" cx="' + px[0] + '" cy="' + px[1] + '" r="' + r.toFixed(1) + '"></circle>';
   });
 
+  // the map's viewBox is a fixed geographic coordinate space (bubble/label
+  // positions come pre-computed from the data), so unlike the other charts
+  // we can't just resize the viewBox to match the container - instead scale
+  // the label font-size up to compensate for how much the container shrank it.
+  const viewBoxW = parseFloat(g.viewbox.split(' ')[2]) || 760;
+  const renderedW = renderWidth(svg, viewBoxW);
+  const labelFontPx = (11 * viewBoxW) / renderedW;
+
   d.province_summary.forEach((p) => {
     const px = g.provinces_px[p.province];
     if (!px) return;
-    html += '<text class="prov-label" data-lbl="' + p.province + '" x="' + px[0] + '" y="' + (px[1] - 24) + '">' + p.province + '</text>';
+    html += '<text class="prov-label" style="font-size:' + labelFontPx.toFixed(1) + 'px" data-lbl="' + p.province + '" x="' + px[0] + '" y="' + (px[1] - 24) + '">' + p.province + '</text>';
   });
 
   svg.innerHTML = html;
@@ -186,7 +204,7 @@ function selectProvince(prov) {
 
 function renderTrend(d) {
   const svg = document.getElementById('trendSvg');
-  const W = 520, H = 260, M = { t: 16, r: 16, b: 28, l: 52 };
+  const W = renderWidth(svg, 520), H = 260, M = { t: 16, r: 16, b: 28, l: 52 };
   const vals = d.national_trend;
   const years = d.years;
   let max = Math.max(...vals), min = Math.min(...vals);
@@ -255,7 +273,7 @@ function renderTrend(d) {
 function renderProvBars(d) {
   const svg = document.getElementById('provSvg');
   const list = d.province_summary.slice();
-  const W = 620, H = 340, M = { t: 8, r: 70, b: 8, l: 130 };
+  const W = renderWidth(svg, 620), H = 340, M = { t: 8, r: 70, b: 8, l: W < MOBILE ? 96 : 130 };
   const rowH = (H - M.t - M.b) / list.length;
   const max = Math.max(...list.map((p) => p.latest));
   const bw = (v) => (v / max) * (W - M.l - M.r);
@@ -298,7 +316,7 @@ function renderProvBars(d) {
 
 function renderGroups(d) {
   const svg = document.getElementById('groupSvg');
-  const W = 300, H = 300, cx = 150, cy = 140, rOuter = 110, rInner = 64;
+  const W = renderWidth(svg, 300), H = W, cx = W / 2, cy = (H * 140) / 300, rOuter = (W * 110) / 300, rInner = (W * 64) / 300;
   const colors = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)', 'var(--series-4)', 'var(--series-7)'];
   const total = d.category_groups.reduce((a, g) => a + g.value, 0);
   let angle = -Math.PI / 2;
@@ -344,22 +362,45 @@ function renderGroups(d) {
 
 function renderCategories(d) {
   const svg = document.getElementById('catSvg');
-  const W = 900, H = 460, M = { t: 10, r: 70, b: 10, l: 330 };
   const list = d.top_categories;
-  const rowH = (H - M.t - M.b) / list.length;
+  const W = renderWidth(svg, 900);
   const max = Math.max(...list.map((c) => c[1]));
-  let html = '';
-  list.forEach((c, i) => {
-    const w = (c[1] / max) * (W - M.l - M.r);
-    const yy = i * rowH;
-    const isOther = c[0] === 'Other categories';
-    html +=
-      '<g class="bar-row" transform="translate(0,' + yy + ')">' +
-      '<text class="bar-label" x="' + (M.l - 8) + '" y="' + (rowH / 2 + 4) + '" text-anchor="end">' + c[0] + '</text>' +
-      '<rect class="bar" x="' + M.l + '" y="' + rowH * 0.2 + '" width="' + w.toFixed(1) + '" height="' + (rowH * 0.6).toFixed(1) + '" rx="3" fill="' + (isOther ? 'var(--text-muted)' : 'var(--series-1)') + '"></rect>' +
-      '<text class="bar-value" x="' + (M.l + w + 6) + '" y="' + (rowH / 2 + 4) + '">' + fmt(c[1]) + '</text>' +
-      '</g>';
-  });
+  let html = '', H;
+
+  if (W < MOBILE) {
+    // long crime-category names don't fit beside a bar on a phone-width
+    // screen, so stack each row: label on its own line, bar below it.
+    const rowH = 40;
+    H = rowH * list.length;
+    const rightPad = 62;
+    list.forEach((c, i) => {
+      const yy = i * rowH;
+      const isOther = c[0] === 'Other categories';
+      const barMaxW = W - 8 - rightPad;
+      const w = (c[1] / max) * barMaxW;
+      html +=
+        '<g class="bar-row" transform="translate(0,' + yy + ')">' +
+        '<text class="bar-label" style="font-size:10.5px" x="2" y="12" text-anchor="start">' + c[0] + '</text>' +
+        '<rect class="bar" x="2" y="18" width="' + w.toFixed(1) + '" height="10" rx="2" fill="' + (isOther ? 'var(--text-muted)' : 'var(--series-1)') + '"></rect>' +
+        '<text class="bar-value" style="font-size:10px" x="' + (2 + w + 6) + '" y="27">' + fmt(c[1]) + '</text>' +
+        '</g>';
+    });
+  } else {
+    H = 460;
+    const M = { t: 10, r: 70, b: 10, l: 330 };
+    const rowH = (H - M.t - M.b) / list.length;
+    list.forEach((c, i) => {
+      const w = (c[1] / max) * (W - M.l - M.r);
+      const yy = i * rowH;
+      const isOther = c[0] === 'Other categories';
+      html +=
+        '<g class="bar-row" transform="translate(0,' + yy + ')">' +
+        '<text class="bar-label" x="' + (M.l - 8) + '" y="' + (rowH / 2 + 4) + '" text-anchor="end">' + c[0] + '</text>' +
+        '<rect class="bar" x="' + M.l + '" y="' + rowH * 0.2 + '" width="' + w.toFixed(1) + '" height="' + (rowH * 0.6).toFixed(1) + '" rx="3" fill="' + (isOther ? 'var(--text-muted)' : 'var(--series-1)') + '"></rect>' +
+        '<text class="bar-value" x="' + (M.l + w + 6) + '" y="' + (rowH / 2 + 4) + '">' + fmt(c[1]) + '</text>' +
+        '</g>';
+    });
+  }
   svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
   svg.innerHTML = html;
 
@@ -379,7 +420,8 @@ function renderCategories(d) {
 function renderGenderGap() {
   const svg = document.getElementById('genderGapSvg');
   const { labels, male, female } = GENDER.gap;
-  const W = 620, H = 400, M = { t: 8, r: 60, b: 8, l: 170 };
+  const W = renderWidth(svg, 620), H = 400, M = { t: 8, r: 60, b: 8, l: W < MOBILE ? 140 : 170 };
+  const labelFontPx = W < MOBILE ? 10 : 11.5;
   const rowH = (H - M.t - M.b) / labels.length;
   const max = Math.max(...male, ...female);
   const bw = (v) => (v / max) * (W - M.l - M.r);
@@ -390,7 +432,7 @@ function renderGenderGap() {
     const wm = bw(male[i]), wf = bw(female[i]);
     html +=
       '<g transform="translate(0,' + yy + ')">' +
-      '<text class="bar-label" x="' + (M.l - 8) + '" y="' + (rowH / 2 + 4) + '" text-anchor="end">' + lab + '</text>' +
+      '<text class="bar-label" style="font-size:' + labelFontPx + 'px" x="' + (M.l - 8) + '" y="' + (rowH / 2 + 4) + '" text-anchor="end">' + lab + '</text>' +
       '<rect x="' + M.l + '" y="' + rowH * 0.1 + '" width="' + wm.toFixed(1) + '" height="' + barH.toFixed(1) + '" rx="3" fill="var(--series-1)"></rect>' +
       '<text class="bar-value" x="' + (M.l + wm + 6) + '" y="' + (rowH * 0.1 + barH * 0.75) + '">' + fmt(male[i]) + 'k</text>' +
       '<rect x="' + M.l + '" y="' + (rowH * 0.1 + barH + 4) + '" width="' + wf.toFixed(1) + '" height="' + barH.toFixed(1) + '" rx="3" fill="var(--series-2)"></rect>' +
@@ -418,7 +460,7 @@ function renderGenderGap() {
 
 function renderDualLine(svgId, tipId, years, maleArr, femaleArr, unit, opts = {}) {
   const svg = document.getElementById(svgId);
-  const W = 520, H = opts.h || 260, M = { t: 16, r: 16, b: 28, l: 44 };
+  const W = renderWidth(svg, 520), H = opts.h || 260, M = { t: 16, r: 16, b: 28, l: 44 };
   const all = maleArr.concat(femaleArr).filter((v) => v !== null && v !== undefined);
   let max = opts.max !== undefined ? opts.max : Math.max(...all);
   let min = opts.min !== undefined ? opts.min : Math.min(0, Math.min(...all));
@@ -438,7 +480,18 @@ function renderDualLine(svgId, tipId, years, maleArr, femaleArr, unit, opts = {}
     gridHtml += '<text class="axis-label" x="' + (M.l - 8) + '" y="' + (yy + 3) + '" text-anchor="end">' + Math.round(v) + unit + '</text>';
   }
   let xlabels = '';
+  const maxLabels = W < MOBILE ? 4 : years.length;
+  const step = Math.max(1, Math.ceil((years.length - 1) / (maxLabels - 1)));
+  const idxs = [];
+  for (let i = 0; i < years.length; i += step) idxs.push(i);
+  const lastIdx = years.length - 1;
+  if (idxs[idxs.length - 1] !== lastIdx) {
+    if (idxs.length > 1 && lastIdx - idxs[idxs.length - 1] < step / 2) idxs.pop();
+    idxs.push(lastIdx);
+  }
+  const shown = new Set(idxs);
   years.forEach((yr, i) => {
+    if (!shown.has(i)) return;
     xlabels += '<text class="axis-label" x="' + x(i) + '" y="' + (H - 10) + '" text-anchor="middle">' + yr + '</text>';
   });
 
@@ -499,6 +552,12 @@ function renderDualLine(svgId, tipId, years, maleArr, femaleArr, unit, opts = {}
   });
 }
 
+function drawGenderTrend() {
+  const select = document.getElementById('genderCrimeSelect');
+  const d = GENDER.crimes[select.value];
+  renderDualLine('genderTrendSvg', 'genderTrendTip', GENDER.years, d.male, d.female, 'k');
+}
+
 function renderGenderTrend() {
   const select = document.getElementById('genderCrimeSelect');
   Object.keys(GENDER.crimes).forEach((name) => {
@@ -508,16 +567,12 @@ function renderGenderTrend() {
     select.appendChild(opt);
   });
   select.value = 'Housebreaking (household)';
-  function draw() {
-    const d = GENDER.crimes[select.value];
-    renderDualLine('genderTrendSvg', 'genderTrendTip', GENDER.years.map((y) => y.slice(2, 4) + '/' + y.slice(7, 9)), d.male, d.female, 'k');
-  }
-  select.addEventListener('change', draw);
-  draw();
+  select.addEventListener('change', drawGenderTrend);
+  drawGenderTrend();
 }
 
 function renderSafety() {
-  renderDualLine('safetySvg', 'safetyTip', GENDER.safety.years.map((y) => y.slice(2, 4) + '/' + y.slice(7, 9)), GENDER.safety.male, GENDER.safety.female, '%', { h: 220, min: 30, max: 50 });
+  renderDualLine('safetySvg', 'safetyTip', GENDER.safety.years, GENDER.safety.male, GENDER.safety.female, '%', { h: 220, min: 30, max: 50 });
 }
 
 function buildProvFilter(d) {
@@ -578,3 +633,20 @@ function renderTable(d) {
 }
 
 init(state.data);
+
+// charts size their viewBox to the measured container width, so they need to
+// be redrawn if that width changes (phone rotation, browser resize, etc.)
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    buildMap(state.data);
+    renderTrend(state.data);
+    renderProvBars(state.data);
+    renderGroups(state.data);
+    renderCategories(state.data);
+    renderGenderGap();
+    drawGenderTrend();
+    renderSafety();
+  }, 200);
+});

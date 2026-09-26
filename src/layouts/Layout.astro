@@ -155,8 +155,12 @@ const { title } = Astro.props;
   tbody tr:hover{background:var(--chip-bg);}
   .rank{color:var(--text-muted); font-variant-numeric:tabular-nums;}
   .pill{display:inline-block; padding:1px 7px; border-radius:999px; font-size:10.5px; background:var(--chip-bg); color:var(--text-secondary);}
-  .table-scroll{max-height:520px; overflow-y:auto;}
+  .table-scroll{max-height:520px; overflow-y:auto; overflow-x:auto; position:relative;}
   .table-note{font-size:11px; color:var(--text-muted); margin-top:8px;}
+  .table-hint{display:none; font-size:11px; color:var(--text-muted); margin:6px 0 0;}
+  @media (max-width:700px){
+    .table-hint{display:block;}
+  }
 
   .sect-divider{margin:26px 0 4px; padding-top:22px; border-top:3px solid var(--border);}
   .sect-divider .kicker{font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); margin-bottom:4px;}

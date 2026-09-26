@@ -211,7 +211,7 @@ function selectProvince(prov) {
 
 function renderTrend(d) {
   const svg = document.getElementById('trendSvg');
-  const W = renderWidth(svg, 520), H = 260, M = { t: 16, r: 16, b: 28, l: 52 };
+  const W = renderWidth(svg, 520), H = 260, M = { t: 26, r: 16, b: 28, l: 52 };
   const vals = d.national_trend;
   const years = d.years;
   let max = Math.max(...vals), min = Math.min(...vals);
@@ -240,6 +240,20 @@ function renderTrend(d) {
   const areaD = pathD + ' L ' + x(vals.length - 1).toFixed(1) + ',' + (H - M.b) + ' L ' + x(0).toFixed(1) + ',' + (H - M.b) + ' Z';
   const dotsHtml = vals.map((v, i) => '<circle class="hover-dot" cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="3.5" fill="var(--series-1)"></circle>').join('');
 
+  const axisTitle = '<text class="axis-title" x="' + M.l + '" y="12">Crimes recorded (17 community-reported serious crimes)</text>';
+
+  // annotate the FY2020/21 dip - the year South Africa's COVID-19 lockdown
+  // sharply suppressed reported crime - so the chart reads as a story, not
+  // just a line.
+  const covidIdx = years.indexOf('2020-2021');
+  let covidHtml = '';
+  if (covidIdx >= 0) {
+    const cx = x(covidIdx), cy = y(vals[covidIdx]);
+    covidHtml =
+      '<line x1="' + cx + '" x2="' + cx + '" y1="' + M.t + '" y2="' + (H - M.b) + '" stroke="var(--baseline)" stroke-width="1" stroke-dasharray="2,3"></line>' +
+      '<text class="annotation-label" x="' + cx + '" y="' + (M.t + 12) + '" text-anchor="' + (covidIdx > years.length / 2 ? 'end' : 'start') + '">COVID-19 lockdown</text>';
+  }
+
   svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
   svg.innerHTML =
     '<defs><linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--series-1)" stop-opacity="0.22"/><stop offset="100%" stop-color="var(--series-1)" stop-opacity="0"/></linearGradient></defs>' +
@@ -247,9 +261,19 @@ function renderTrend(d) {
     '<line class="baseline" x1="' + M.l + '" x2="' + (W - M.r) + '" y1="' + (H - M.b) + '" y2="' + (H - M.b) + '"></line>' +
     '<path d="' + areaD + '" fill="url(#trendGrad)"></path>' +
     '<path d="' + pathD + '" fill="none" stroke="var(--series-1)" stroke-width="2"></path>' +
-    dotsHtml + xlabels +
+    dotsHtml + xlabels + axisTitle + covidHtml +
     '<line class="crosshair" id="trendCross" x1="0" x2="0" y1="' + M.t + '" y2="' + (H - M.b) + '"></line>' +
     '<rect id="trendHitbox" x="' + M.l + '" y="' + M.t + '" width="' + (W - M.l - M.r) + '" height="' + (H - M.t - M.b) + '" fill="transparent"></rect>';
+
+  const latest = vals[vals.length - 1], first = vals[0], low = Math.min(...vals);
+  const pctFromLow = (((latest - low) / low) * 100).toFixed(0);
+  const pctFromFirst = (((latest - first) / first) * 100).toFixed(0);
+  const insight = document.getElementById('trendInsight');
+  if (insight) {
+    insight.innerHTML =
+      'Recorded crime fell <b>' + Math.abs(pctFromFirst) + '%</b> from FY' + years[0] + ' to FY' + years[years.length - 1] +
+      ', with the steepest drop during the FY2020/21 COVID-19 lockdown. Since that low point it has climbed back <b>' + pctFromLow + '%</b>, and is now trending down again over the last two years.';
+  }
 
   const tip = document.getElementById('trendTip');
   const hit = document.getElementById('trendHitbox');
@@ -319,6 +343,24 @@ function renderProvBars(d) {
     row.addEventListener('mouseleave', () => (tip.style.opacity = 0));
     row.addEventListener('click', () => selectProvince(prov === state.selectedProvince ? null : prov));
   });
+
+  const insight = document.getElementById('provInsight');
+  if (insight && !state.selectedProvince) {
+    const top2 = list.slice(0, 2);
+    const total = list.reduce((a, p) => a + p.latest, 0);
+    const top2Share = (((top2[0].latest + top2[1].latest) / total) * 100).toFixed(0);
+    const biggestDrop = list.slice().sort((a, b) => a.pct_change - b.pct_change)[0];
+    const biggestRise = list.slice().sort((a, b) => b.pct_change - a.pct_change)[0];
+    insight.innerHTML =
+      '<b>' + top2[0].province + '</b> and <b>' + top2[1].province + '</b> alone account for <b>' + top2Share + '%</b> of all recorded crime nationally. ' +
+      '<b>' + biggestDrop.province + '</b> saw the largest year-on-year fall (' + fmtPct(biggestDrop.pct_change) + '), while ' +
+      (biggestRise.pct_change > 0 ? '<b>' + biggestRise.province + '</b> is the only province that got worse (' + fmtPct(biggestRise.pct_change) + ').' : 'every province improved on the year before.');
+  } else if (insight && state.selectedProvince) {
+    const p = list.find((x) => x.province === state.selectedProvince);
+    insight.innerHTML = p
+      ? '<b>' + p.province + '</b>: ' + fmt(p.latest) + ' crimes recorded in FY' + d.meta.latest_year + ', ' + fmtPct(p.pct_change) + ' vs the year before' + (p.per_100k ? ' (' + fmt(p.per_100k) + ' per 100,000 people).' : '.')
+      : '';
+  }
 }
 
 function renderGroups(d) {
@@ -365,6 +407,13 @@ function renderGroups(d) {
   document.getElementById('groupLegend').innerHTML = d.category_groups
     .map((g, i) => '<span class="li"><span class="sw" style="background:' + colors[i % colors.length] + '"></span>' + g.name + '</span>')
     .join('');
+
+  const insight = document.getElementById('groupInsight');
+  if (insight) {
+    const sorted = d.category_groups.slice().sort((a, b) => b.value - a.value);
+    const share = ((sorted[0].value / total) * 100).toFixed(0);
+    insight.innerHTML = '<b>' + sorted[0].name + '</b> is the single largest share of recorded crime, at <b>' + share + '%</b> of the national total.';
+  }
 }
 
 function renderCategories(d) {
@@ -422,6 +471,16 @@ function renderCategories(d) {
     });
     row.addEventListener('mouseleave', () => (tip.style.opacity = 0));
   });
+
+  const insight = document.getElementById('catInsight');
+  if (insight) {
+    const withoutOther = list.filter((c) => c[0] !== 'Other categories');
+    const top5 = withoutOther.slice(0, 5);
+    const total = list.reduce((a, c) => a + c[1], 0);
+    const top5Share = ((top5.reduce((a, c) => a + c[1], 0) / total) * 100).toFixed(0);
+    insight.innerHTML =
+      'Just <b>5</b> crime types - led by <b>' + top5[0][0].toLowerCase() + '</b> - make up <b>' + top5Share + '%</b> of everything recorded nationally.';
+  }
 }
 
 function renderGenderGap() {
@@ -467,7 +526,7 @@ function renderGenderGap() {
 
 function renderDualLine(svgId, tipId, years, maleArr, femaleArr, unit, opts = {}) {
   const svg = document.getElementById(svgId);
-  const W = renderWidth(svg, 520), H = opts.h || 260, M = { t: 16, r: 16, b: 28, l: 44 };
+  const W = renderWidth(svg, 520), H = opts.h || 260, M = { t: opts.title ? 26 : 16, r: 16, b: 28, l: 44 };
   const all = maleArr.concat(femaleArr).filter((v) => v !== null && v !== undefined);
   let max = opts.max !== undefined ? opts.max : Math.max(...all);
   let min = opts.min !== undefined ? opts.min : Math.min(0, Math.min(...all));
@@ -520,9 +579,11 @@ function renderDualLine(svgId, tipId, years, maleArr, femaleArr, unit, opts = {}
       .join('');
   }
 
+  const titleHtml = opts.title ? '<text class="axis-title" x="' + M.l + '" y="12">' + opts.title + '</text>' : '';
+
   svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
   svg.innerHTML =
-    gridHtml +
+    gridHtml + titleHtml +
     '<line class="baseline" x1="' + M.l + '" x2="' + (W - M.r) + '" y1="' + (H - M.b) + '" y2="' + (H - M.b) + '"></line>' +
     '<path d="' + pathFor(maleArr) + '" fill="none" stroke="var(--series-1)" stroke-width="2"></path>' +
     '<path d="' + pathFor(femaleArr) + '" fill="none" stroke="var(--series-2)" stroke-width="2"></path>' +
@@ -562,7 +623,7 @@ function renderDualLine(svgId, tipId, years, maleArr, femaleArr, unit, opts = {}
 function drawGenderTrend() {
   const select = document.getElementById('genderCrimeSelect');
   const d = GENDER.crimes[select.value];
-  renderDualLine('genderTrendSvg', 'genderTrendTip', GENDER.years, d.male, d.female, 'k');
+  renderDualLine('genderTrendSvg', 'genderTrendTip', GENDER.years, d.male, d.female, 'k', { title: 'Estimated victims (thousands)' });
 }
 
 function renderGenderTrend() {
@@ -579,7 +640,7 @@ function renderGenderTrend() {
 }
 
 function renderSafety() {
-  renderDualLine('safetySvg', 'safetyTip', GENDER.safety.years, GENDER.safety.male, GENDER.safety.female, '%', { h: 220, min: 30, max: 50 });
+  renderDualLine('safetySvg', 'safetyTip', GENDER.safety.years, GENDER.safety.male, GENDER.safety.female, '%', { h: 220, min: 30, max: 50, title: 'Share who feel "very unsafe" walking alone after dark' });
 }
 
 function buildProvFilter(d) {

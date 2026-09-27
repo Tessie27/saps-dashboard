@@ -505,7 +505,7 @@ function renderProvBars(d) {
   const list = d.province_summary
     .map((p) => ({ ...p, scopedTotal: scoped(p.trend).total, scopedPct: scoped(p.trend).pct }))
     .sort((a, b) => b.scopedTotal - a.scopedTotal);
-  const W = renderWidth(svg, 620), H = 340, M = { t: 8, r: 70, b: 8, l: W < MOBILE ? 96 : 130 };
+  const W = renderWidth(svg, 620), H = 340, M = { t: 8, r: 70, b: 8, l: W < MOBILE ? 100 : 138 };
   const rowH = (H - M.t - M.b) / list.length;
   const max = Math.max(...list.map((p) => p.scopedTotal)) || 1;
   const bw = (v) => (v / max) * (W - M.l - M.r);
@@ -653,7 +653,7 @@ function renderCategories(d) {
     });
   } else {
     H = 460;
-    const M = { t: 10, r: 70, b: 10, l: 330 };
+    const M = { t: 10, r: 70, b: 10, l: 360 };
     const rowH = (H - M.t - M.b) / list.length;
     list.forEach((c, i) => {
       const w = (c[1] / max) * (W - M.l - M.r);

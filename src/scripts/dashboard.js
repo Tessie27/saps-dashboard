@@ -13,6 +13,7 @@ const state = {
   sortDir: -1,
   search: '',
   provFilterVal: '',
+  tablePage: 0,
 };
 
 const themeToggle = document.getElementById('themeToggle');
@@ -214,30 +215,36 @@ function renderKpis(d) {
     { label: 'Top crime category', value: topCat.name, note: fmt(topCat.total) + ' recorded, ' + scopeName },
     { label: 'Per 100,000 population', value: per100k ? fmt(per100k) : ' - ', note: yearsSpan > 1 ? 'average per year, ' + scopeName : scopeName },
   ];
-  const row = document.getElementById('kpiRow');
-  row.innerHTML = kpis
-    .map((k) => {
-      let deltaHtml = '';
-      if (k.delta !== undefined && k.delta !== null) {
-        const cls = k.delta > 0 ? 'up' : 'down';
-        deltaHtml = '<div class="delta ' + cls + '">' + fmtPct(k.delta) + ' vs prior period</div>';
-      }
-      const valueCls = k.cls ? ' style="color:var(--' + (k.cls === 'up' ? 'bad' : 'good') + ')"' : '';
-      return '<div class="kpi"><div class="label">' + k.label + '</div><div class="value"' + valueCls + '>' + k.value + '</div>' + deltaHtml + '<div class="note">' + k.note + '</div></div>';
-    })
-    .join('');
+  const ids = ['kpiTotalBox', 'kpiChangeBox', 'kpiRankBox', 'kpiTopcatBox', 'kpiRateBox'];
+  kpis.forEach((k, i) => {
+    const el = document.getElementById(ids[i]);
+    if (el) el.innerHTML = kpiSoloHtml(k);
+  });
+}
+
+// one hero-stat section's inner HTML: a label, a big value, an optional
+// delta line, and a note - shared by every solo-KPI story section
+function kpiSoloHtml(k) {
+  let deltaHtml = '';
+  if (k.delta !== undefined && k.delta !== null) {
+    const cls = k.delta > 0 ? 'up' : 'down';
+    deltaHtml = '<div class="delta ' + cls + '">' + fmtPct(k.delta) + ' vs prior period</div>';
+  }
+  const valueCls = k.cls ? ' style="color:var(--' + (k.cls === 'up' ? 'bad' : 'good') + ')"' : '';
+  return '<div class="label">' + k.label + '</div><div class="value"' + valueCls + '>' + k.value + '</div>' + deltaHtml + '<div class="note">' + k.note + '</div>';
 }
 
 function renderGenderKpis() {
   const kpis = [
-    { label: 'Individual assault, 2025/26', value: '2.5×', note: '293,000 men vs 115,000 women assaulted' },
-    { label: 'Housebreaking, 2025/26', value: '1.4×', note: '632,000 vs 446,000 households, by sex of head' },
-    { label: 'Assault by a partner', value: '31% vs 2%', note: 'women vs men naming a spouse/partner as attacker' },
-    { label: 'Unsafe alone after dark', value: '45% vs 39%', note: 'women vs men who feel "very unsafe", 2025/26' },
+    { id: 'gkpiAssaultBox', label: 'Individual assault, 2025/26', value: '2.5×', note: '293,000 men vs 115,000 women assaulted' },
+    { id: 'gkpiHousebreakBox', label: 'Housebreaking, 2025/26', value: '1.4×', note: '632,000 vs 446,000 households, by sex of head' },
+    { id: 'gkpiPartnerBox', label: 'Assault by a partner', value: '31% vs 2%', note: 'women vs men naming a spouse/partner as attacker' },
+    { id: 'gkpiUnsafeBox', label: 'Unsafe alone after dark', value: '45% vs 39%', note: 'women vs men who feel "very unsafe", 2025/26' },
   ];
-  document.getElementById('genderKpiRow').innerHTML = kpis
-    .map((k) => '<div class="kpi"><div class="label">' + k.label + '</div><div class="value">' + k.value + '</div><div class="note">' + k.note + '</div></div>')
-    .join('');
+  kpis.forEach((k) => {
+    const el = document.getElementById(k.id);
+    if (el) el.innerHTML = kpiSoloHtml(k);
+  });
 }
 
 function scopedRate(p) {
@@ -372,6 +379,7 @@ document.getElementById('yearReset').addEventListener('click', () => {
 
 function selectProvince(prov) {
   state.selectedProvince = prov;
+  state.tablePage = 0;
   applyFilters();
 }
 
@@ -862,10 +870,12 @@ function buildProvFilter(d) {
   });
   sel.addEventListener('change', () => {
     state.provFilterVal = sel.value;
+    state.tablePage = 0;
     selectProvince(sel.value || null);
   });
   document.getElementById('stationSearch').addEventListener('input', (e) => {
     state.search = e.target.value.toLowerCase();
+    state.tablePage = 0;
     renderTable(state.data);
   });
   document.querySelectorAll('th[data-k]').forEach((th) => {
@@ -877,10 +887,21 @@ function buildProvFilter(d) {
         state.sortKey = k;
         state.sortDir = k === 'station' || k === 'province' || k === 'district' ? 1 : -1;
       }
+      state.tablePage = 0;
       renderTable(state.data);
     });
   });
+  document.getElementById('tablePrev').addEventListener('click', () => {
+    state.tablePage -= 1;
+    renderTable(state.data);
+  });
+  document.getElementById('tableNext').addEventListener('click', () => {
+    state.tablePage += 1;
+    renderTable(state.data);
+  });
 }
+
+const TABLE_PAGE_SIZE = 10;
 
 function renderTable(d) {
   let rows = d.top_stations.slice();
@@ -896,17 +917,27 @@ function renderTable(d) {
     return (a[k] - b[k]) * state.sortDir;
   });
   document.getElementById('tableCount').textContent = rows.length + ' station' + (rows.length === 1 ? '' : 's');
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / TABLE_PAGE_SIZE));
+  state.tablePage = Math.max(0, Math.min(state.tablePage, totalPages - 1));
+  const startIdx = state.tablePage * TABLE_PAGE_SIZE;
+  const pageRows = rows.slice(startIdx, startIdx + TABLE_PAGE_SIZE);
+
   const tbody = document.getElementById('stationBody');
-  tbody.innerHTML = rows
+  tbody.innerHTML = pageRows
     .map((r, i) => {
       const color = r.pct_change > 0 ? 'var(--bad)' : 'var(--good)';
       return (
-        '<tr><td class="rank num">' + (i + 1) + '</td><td>' + r.station + '</td><td><span class="pill">' + r.province + '</span></td><td>' + r.district + '</td>' +
+        '<tr><td class="rank num">' + (startIdx + i + 1) + '</td><td>' + r.station + '</td><td><span class="pill">' + r.province + '</span></td><td>' + r.district + '</td>' +
         '<td class="num">' + fmt(r.total_2024_25) + '</td><td class="num">' + fmt(r.total_2023_24) + '</td>' +
         '<td class="num" style="color:' + color + '">' + fmtPct(r.pct_change) + '</td></tr>'
       );
     })
     .join('');
+
+  document.getElementById('tablePageLabel').textContent = 'Page ' + (state.tablePage + 1) + ' of ' + totalPages;
+  document.getElementById('tablePrev').disabled = state.tablePage === 0;
+  document.getElementById('tableNext').disabled = state.tablePage >= totalPages - 1;
 }
 
 init(state.data);
@@ -937,50 +968,25 @@ if (backToTop) {
   backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }
 
-// Tabs: only one top-level section (SAPS charts / Gender breakdown / Station
-// leaderboard) is visible at a time, so a person sees one screenful of
-// related charts instead of the whole page's worth stacked together. The
-// existing top jump-nav and left sidebar both link by #id as before; this
-// maps each id to the tab panel that contains it, so clicking any of them
-// switches to the right panel before scrolling to the target.
-const TAB_OF_ID = {
-  kpiRow: 'saps', mapCard: 'saps', trendCard: 'saps', provCard: 'saps',
-  genderSection: 'gender', stationTable: 'stations',
-};
-function showTab(tab) {
-  document.querySelectorAll('.tab-panel').forEach((p) => p.classList.toggle('active', p.dataset.tab === tab));
-  // charts measure their container's real width to size their viewBox, which
-  // reads as 0 while a tab panel is display:none - redraw whichever tab just
-  // became visible so its charts pick up the real width, same as on resize.
-  if (tab === 'saps') {
-    buildMap(state.data);
-    renderTrend(state.data);
-    renderProvBars(state.data);
-    renderGroups(state.data);
-    renderCategories(state.data);
-  } else if (tab === 'gender') {
-    renderGenderGap();
-    drawGenderTrend();
-    renderSafety();
-  }
-}
-(function initTabs() {
+// Scrollytelling: every stat/chart is its own full section in normal
+// document flow (not a slide deck - nothing is ever display:none, so charts
+// never need special-case redraws for hidden containers). Nav links just
+// smooth-scroll to their target section.
+(function initAnchorNav() {
   const navLinks = document.querySelectorAll('.side-nav a, nav.jump a');
-  if (!navLinks.length) return;
   navLinks.forEach((a) => {
     a.addEventListener('click', (e) => {
       const id = a.getAttribute('href').slice(1);
+      const target = document.getElementById(id);
+      if (!target) return;
       e.preventDefault();
-      showTab(TAB_OF_ID[id] || 'saps');
-      requestAnimationFrame(() => {
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
 })();
 
-// scroll-spy: within whichever tab is open, highlight whichever section's
-// anchor is currently in view, across both the side nav and the top jump-nav
+// scroll-spy: highlight whichever section's anchor is currently in view,
+// across both the side nav and the top jump-nav
 (function initScrollSpy() {
   const navLinks = document.querySelectorAll('.side-nav a, nav.jump a');
   if (!navLinks.length) return;

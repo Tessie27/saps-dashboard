@@ -1,8 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
-import SapsSection from '../components/SapsSection.astro';
-import GenderSection from '../components/GenderSection.astro';
 import StationTable from '../components/StationTable.astro';
 import Footer from '../components/Footer.astro';
 import sapsData from '../data/saps.json';
@@ -37,16 +35,219 @@ const srcLine = `SAPS source: ${sapsData.meta.source}  -  ${sapsData.meta.file} 
       </div>
     </div>
 
-    <div class="tab-panel active" data-tab="saps">
-      <div class="kpi-row" id="kpiRow"></div>
-      <SapsSection />
+    <div id="sapsSection"></div>
+
+    <div class="story-section" id="kpiRow">
+      <div class="story-chip">Overview</div>
+      <div class="kpi-solo" id="kpiTotalBox"></div>
     </div>
 
-    <div class="tab-panel" data-tab="gender">
-      <GenderSection />
+    <div class="story-section">
+      <div class="story-chip">Overview</div>
+      <div class="kpi-solo" id="kpiChangeBox"></div>
     </div>
 
-    <div class="tab-panel" data-tab="stations">
+    <div class="story-section" id="trendCard">
+      <div class="story-chip">Trend</div>
+      <div class="card">
+        <h2>National trend  -  FY2015/16 to FY2024/25</h2>
+        <div class="cardsub">17 community-reported serious crimes, national total per financial year.</div>
+        <div class="chart-wrap">
+          <svg id="trendSvg" viewBox="0 0 520 260"></svg>
+          <div class="tooltip" id="trendTip"></div>
+        </div>
+        <div class="insight" id="trendInsight"></div>
+      </div>
+    </div>
+
+    <div class="story-section" id="mapCard">
+      <div class="story-chip">Geography</div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2 id="mapTitle">Crime hotspot map  -  2024/25</h2>
+            <div class="cardsub">Bubble size &amp; color = recorded crime volume by province. Orange dots = highest-volume metro stations.</div>
+          </div>
+          <div class="seg" id="mapMode">
+            <button data-m="total" class="active">Total</button>
+            <button data-m="rate">Per 100k pop.</button>
+          </div>
+        </div>
+        <div class="map-wrap chart-wrap">
+          <svg id="mapSvg" viewBox="0 0 760 700"></svg>
+          <div class="map-tip" id="mapTip"></div>
+        </div>
+        <div class="map-legend">
+          <span>Low</span><span class="legend-ramp"></span><span>High</span>
+          <span style="margin-left:14px;">
+            <span class="sw" style="background:var(--series-2); border-radius:50%; width:8px;height:8px; display:inline-block;"></span>
+            Metro station
+          </span>
+          <button class="clearbtn" id="mapClear" style="margin-left:auto; display:none;">Clear selection</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Geography</div>
+      <div class="kpi-solo" id="kpiRankBox"></div>
+    </div>
+
+    <div class="story-section" id="provCard">
+      <div class="story-chip">Geography</div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2 id="provBarTitle">Crime by province  -  2024/25</h2>
+            <div class="cardsub" id="provBarSub">Sorted by total recorded crimes. Click a bar to select that province.</div>
+          </div>
+          <button class="clearbtn" id="provClear" style="display:none;">Clear selection</button>
+        </div>
+        <div class="chart-wrap">
+          <svg id="provSvg" viewBox="0 0 620 340"></svg>
+          <div class="tooltip" id="provTip"></div>
+        </div>
+        <div class="insight" id="provInsight"></div>
+      </div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Composition</div>
+      <div class="card">
+        <h2 id="groupTitle">Crime category mix  -  2024/25</h2>
+        <div class="cardsub">National totals grouped by SAPS crime category, latest financial year.</div>
+        <div class="chart-wrap">
+          <svg id="groupSvg" viewBox="0 0 300 300"></svg>
+          <div class="tooltip" id="groupTip"></div>
+        </div>
+        <div class="legend" id="groupLegend"></div>
+        <div class="insight" id="groupInsight"></div>
+      </div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Composition</div>
+      <div class="kpi-solo" id="kpiTopcatBox"></div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Composition</div>
+      <div class="card">
+        <h2 id="catTitle">Top crime categories  -  national, 2024/25</h2>
+        <div class="cardsub">Highest-volume individual crime types across all stations.</div>
+        <div class="chart-wrap">
+          <svg id="catSvg" viewBox="0 0 900 460"></svg>
+          <div class="tooltip" id="catTip"></div>
+        </div>
+        <div class="insight" id="catInsight"></div>
+      </div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Overview</div>
+      <div class="kpi-solo" id="kpiRateBox"></div>
+    </div>
+
+    <div class="story-section" id="genderSection">
+      <div class="sect-divider">
+        <div class="kicker">Stats SA &middot; Victims of Crime Survey 2025/26</div>
+        <h2>Who experiences crime, by sex</h2>
+        <div class="cardsub" style="margin-bottom:0;">SAPS station data above counts crimes reported to police. This section comes from a separate household survey that also captures unreported crime, and breaks it down by sex.</div>
+      </div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Gender lens</div>
+      <div class="kpi-solo" id="gkpiAssaultBox"></div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Gender lens</div>
+      <div class="kpi-solo" id="gkpiHousebreakBox"></div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Gender lens</div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>Gap by crime category  -  2025/26</h2>
+            <div class="cardsub">Estimated victims, thousands. Sorted by the size of the gap between men and women.</div>
+          </div>
+          <span class="pill" title="Stats SA's household survey is only conducted at national level, so this chart can't be broken down by province.">National survey - no province breakdown</span>
+        </div>
+        <div class="chart-wrap">
+          <svg id="genderGapSvg" viewBox="0 0 620 400"></svg>
+          <div class="tooltip" id="genderGapTip"></div>
+        </div>
+        <div class="legend">
+          <span class="li"><span class="sw" style="background:var(--series-1)"></span>Male</span>
+          <span class="li"><span class="sw" style="background:var(--series-2)"></span>Female</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Gender lens</div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>Trend by crime type</h2>
+            <div class="cardsub">2018/19 to 2025/26. Select a category.</div>
+          </div>
+          <select class="provsel" id="genderCrimeSelect"></select>
+        </div>
+        <div class="chart-wrap">
+          <svg id="genderTrendSvg" viewBox="0 0 520 260"></svg>
+          <div class="tooltip" id="genderTrendTip"></div>
+        </div>
+        <div class="legend">
+          <span class="li"><span class="sw" style="background:var(--series-1)"></span>Male</span>
+          <span class="li"><span class="sw" style="background:var(--series-2)"></span>Female</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Safety</div>
+      <div class="kpi-solo" id="gkpiUnsafeBox"></div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Safety</div>
+      <div class="card">
+        <h2>Feel "very unsafe" walking alone after dark</h2>
+        <div class="cardsub">Percentage of individuals 16+, by sex, 2021/22 to 2025/26.</div>
+        <div class="chart-wrap">
+          <svg id="safetySvg" viewBox="0 0 520 220"></svg>
+          <div class="tooltip" id="safetyTip"></div>
+        </div>
+        <div class="legend">
+          <span class="li"><span class="sw" style="background:var(--series-1)"></span>Male</span>
+          <span class="li"><span class="sw" style="background:var(--series-2)"></span>Female</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Safety</div>
+      <div class="kpi-solo" id="gkpiPartnerBox"></div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Safety</div>
+      <div class="card">
+        <h2>Assault by a spouse or partner</h2>
+        <div class="cardsub">Share of assault victims who named the attacker as a spouse or intimate partner, 2025/26.</div>
+        <div class="callout">
+          <div class="big">31.4% <span style="font-size:13px; font-weight:400; color:var(--text-muted);">women</span><br /><span style="font-size:26px; color:var(--series-1);">2.2%</span> <span style="font-size:13px; font-weight:400; color:var(--text-muted);">men</span></div>
+          <p>Men are assaulted more often overall (see the gap chart), but women's assaults are far more likely to happen at the hands of a spouse or intimate partner &mdash; a 14&times; gap on this one measure.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Explore the data</div>
       <StationTable />
     </div>
 

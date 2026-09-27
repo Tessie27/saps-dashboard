@@ -98,26 +98,6 @@ const { title } = Astro.props;
   .year-chip:hover{border-color:var(--series-1); color:var(--text-primary);}
   .year-chip.active{background:var(--series-1); border-color:var(--series-1); color:#fff; font-weight:600;}
 
-  .kpi-row{
-    display:grid; grid-template-columns:repeat(5,1fr);
-    border:1px solid var(--border); border-radius:10px; background:var(--surface-1);
-    margin-bottom:24px; overflow:hidden;
-  }
-  .kpi-row-4{grid-template-columns:repeat(4,1fr);}
-  @media (max-width:1000px){ .kpi-row{grid-template-columns:repeat(2,1fr);} }
-  @media (max-width:480px){ .kpi-row{grid-template-columns:1fr;} }
-  .kpi{background:transparent; border:none; border-left:1px solid var(--border); padding:18px 20px;}
-  .kpi:first-child{border-left:none;}
-  @media (max-width:1000px){ .kpi:nth-child(2n+1){border-left:none;} }
-  .kpi .label{font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; font-weight:600;}
-  .kpi .value{font-size:26px; font-weight:700; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; line-height:1.2;}
-  .kpi .delta{font-size:12.5px; margin-top:6px; font-weight:600;}
-  .kpi .delta.up{color:var(--bad);} .kpi .delta.down{color:var(--good);}
-  .kpi .note{font-size:12px; color:var(--text-muted); margin-top:3px; line-height:1.4;}
-
-  .grid{display:grid; grid-template-columns: 1.15fr 0.85fr; gap:20px;}
-  @media (max-width:980px){ .grid{grid-template-columns:1fr;} }
-
   .card{background:var(--surface-1); border:1px solid var(--border); border-radius:10px; padding:22px 24px 24px; margin-bottom:20px;}
   .card h2{font-size:16px; margin:0 0 4px; font-weight:700; text-transform:none; letter-spacing:0; color:var(--text-primary);}
   .card .cardsub{font-size:12.5px; color:var(--text-muted); margin-bottom:18px; line-height:1.5;}
@@ -194,22 +174,48 @@ const { title } = Astro.props;
   tbody tr:hover{box-shadow: inset 3px 0 0 var(--series-1); background:var(--chip-bg);}
   .rank{color:var(--text-muted); font-variant-numeric:tabular-nums;}
   .pill{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; background:var(--chip-bg); color:var(--text-secondary);}
-  .table-scroll{max-height:520px; overflow-y:auto; overflow-x:auto; position:relative; border:1px solid var(--border); border-radius:8px;}
+  .table-scroll{overflow-x:auto; position:relative; border:1px solid var(--border); border-radius:8px;}
+  .table-pager{display:flex; align-items:center; justify-content:center; gap:16px; margin-top:16px;}
+  .pagebtn{
+    border:1px solid var(--border); background:var(--surface-2); color:var(--text-primary);
+    font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:6px; cursor:pointer;
+  }
+  .pagebtn:hover:not(:disabled){border-color:var(--series-1); color:var(--series-1);}
+  .pagebtn:disabled{opacity:.4; cursor:default;}
+  .table-pager span{font-size:12.5px; color:var(--text-muted); font-variant-numeric:tabular-nums;}
   .table-note{font-size:11.5px; color:var(--text-muted); margin-top:10px; line-height:1.5;}
   .table-hint{display:none; font-size:11.5px; color:var(--text-muted); margin:8px 0 0;}
   @media (max-width:700px){
     .table-hint{display:block;}
   }
 
-  .sect-divider{margin:36px 0 8px; padding-top:28px; border-top:1px solid var(--border);}
+  .sect-divider{margin:0; padding-top:0; border-top:none;}
   .sect-divider .kicker{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--series-1); font-weight:700; margin-bottom:6px;}
   .sect-divider h2{font-size:20px; text-transform:none; letter-spacing:0; color:var(--text-primary); margin:0 0 6px; font-weight:700;}
-  /* each tab panel is its own page now, so its leading divider needs no top rule/gap */
-  .tab-panel > .sect-divider:first-child{margin-top:0; padding-top:0; border-top:none;}
 
-  /* tabs: only the active panel is shown, so a person sees one section at a time */
-  .tab-panel{display:none;}
-  .tab-panel.active{display:block;}
+  /* Scrollytelling: one stat or chart per section, stacked in normal scroll
+     order (not a slide deck - everything stays in the document, so nothing
+     needs special handling for hidden/0-width charts). Generous vertical
+     rhythm and a single centered column keep each section reading as one
+     idea instead of a dense grid of competing cards. */
+  .story-section{
+    max-width:860px; margin:0 auto; padding:56px 4px;
+    border-bottom:1px solid var(--border);
+  }
+  .story-section:last-child{border-bottom:none;}
+  .story-section .card{border:none; background:none; padding:0; margin:0; border-radius:0;}
+  .story-chip{
+    display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--series-1); background:var(--chip-bg); padding:4px 10px; border-radius:999px; margin-bottom:14px;
+  }
+
+  /* hero KPI: one big number per section, like a title-card stat */
+  .kpi-solo .label{font-size:12.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; font-weight:600; margin-bottom:12px;}
+  .kpi-solo .value{font-size:56px; font-weight:700; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; line-height:1.05;}
+  .kpi-solo .delta{font-size:15px; margin-top:12px; font-weight:600;}
+  .kpi-solo .delta.up{color:var(--bad);} .kpi-solo .delta.down{color:var(--good);}
+  .kpi-solo .note{font-size:13.5px; color:var(--text-muted); margin-top:6px; line-height:1.5;}
+  @media (max-width:700px){ .kpi-solo .value{font-size:40px;} }
 
   footer{margin-top:28px; color:var(--text-muted); font-size:11px; line-height:1.6; border-top:1px solid var(--border); padding-top:14px;}
 

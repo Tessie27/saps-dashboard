@@ -16,6 +16,7 @@ const srcLine = `SAPS source: ${sapsData.meta.source}  -  ${sapsData.meta.file} 
     <a href="#mapCard">Hotspot map</a>
     <a href="#trendCard">National trend</a>
     <a href="#provCard">Province &amp; category</a>
+    <div class="side-nav-sep"></div>
     <a href="#genderSection">Gender breakdown</a>
     <a href="#stationTable">Station leaderboard</a>
   </nav>
@@ -36,13 +37,18 @@ const srcLine = `SAPS source: ${sapsData.meta.source}  -  ${sapsData.meta.file} 
       </div>
     </div>
 
-    <div class="kpi-row" id="kpiRow"></div>
+    <div class="tab-panel active" data-tab="saps">
+      <div class="kpi-row" id="kpiRow"></div>
+      <SapsSection />
+    </div>
 
-    <SapsSection />
+    <div class="tab-panel" data-tab="gender">
+      <GenderSection />
+    </div>
 
-    <GenderSection />
-
-    <StationTable />
+    <div class="tab-panel" data-tab="stations">
+      <StationTable />
+    </div>
 
     <Footer firstYear={sapsData.years[0]} latestYear={sapsData.meta.latest_year} />
   </div>

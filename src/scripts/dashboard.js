@@ -735,7 +735,7 @@ function renderGenderGap() {
 
 function renderDualLine(svgId, tipId, years, maleArr, femaleArr, unit, opts = {}) {
   const svg = document.getElementById(svgId);
-  const W = renderWidth(svg, 520), H = opts.h || 260, M = { t: opts.title ? 26 : 16, r: 16, b: 28, l: 44 };
+  const W = renderWidth(svg, 520), H = opts.h || 260, M = { t: opts.title ? 26 : 16, r: 28, b: 28, l: 44 };
   const all = maleArr.concat(femaleArr).filter((v) => v !== null && v !== undefined);
   let max = opts.max !== undefined ? opts.max : Math.max(...all);
   let min = opts.min !== undefined ? opts.min : Math.min(0, Math.min(...all));
@@ -937,8 +937,50 @@ if (backToTop) {
   backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }
 
-// scroll-spy: highlight whichever section's anchor is currently in view,
-// across both the side nav and the top jump-nav
+// Tabs: only one top-level section (SAPS charts / Gender breakdown / Station
+// leaderboard) is visible at a time, so a person sees one screenful of
+// related charts instead of the whole page's worth stacked together. The
+// existing top jump-nav and left sidebar both link by #id as before; this
+// maps each id to the tab panel that contains it, so clicking any of them
+// switches to the right panel before scrolling to the target.
+const TAB_OF_ID = {
+  kpiRow: 'saps', mapCard: 'saps', trendCard: 'saps', provCard: 'saps',
+  genderSection: 'gender', stationTable: 'stations',
+};
+function showTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach((p) => p.classList.toggle('active', p.dataset.tab === tab));
+  // charts measure their container's real width to size their viewBox, which
+  // reads as 0 while a tab panel is display:none - redraw whichever tab just
+  // became visible so its charts pick up the real width, same as on resize.
+  if (tab === 'saps') {
+    buildMap(state.data);
+    renderTrend(state.data);
+    renderProvBars(state.data);
+    renderGroups(state.data);
+    renderCategories(state.data);
+  } else if (tab === 'gender') {
+    renderGenderGap();
+    drawGenderTrend();
+    renderSafety();
+  }
+}
+(function initTabs() {
+  const navLinks = document.querySelectorAll('.side-nav a, nav.jump a');
+  if (!navLinks.length) return;
+  navLinks.forEach((a) => {
+    a.addEventListener('click', (e) => {
+      const id = a.getAttribute('href').slice(1);
+      e.preventDefault();
+      showTab(TAB_OF_ID[id] || 'saps');
+      requestAnimationFrame(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  });
+})();
+
+// scroll-spy: within whichever tab is open, highlight whichever section's
+// anchor is currently in view, across both the side nav and the top jump-nav
 (function initScrollSpy() {
   const navLinks = document.querySelectorAll('.side-nav a, nav.jump a');
   if (!navLinks.length) return;

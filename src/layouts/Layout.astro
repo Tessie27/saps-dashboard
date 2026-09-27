@@ -204,6 +204,12 @@ const { title } = Astro.props;
   .sect-divider{margin:36px 0 8px; padding-top:28px; border-top:1px solid var(--border);}
   .sect-divider .kicker{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--series-1); font-weight:700; margin-bottom:6px;}
   .sect-divider h2{font-size:20px; text-transform:none; letter-spacing:0; color:var(--text-primary); margin:0 0 6px; font-weight:700;}
+  /* each tab panel is its own page now, so its leading divider needs no top rule/gap */
+  .tab-panel > .sect-divider:first-child{margin-top:0; padding-top:0; border-top:none;}
+
+  /* tabs: only the active panel is shown, so a person sees one section at a time */
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
 
   footer{margin-top:28px; color:var(--text-muted); font-size:11px; line-height:1.6; border-top:1px solid var(--border); padding-top:14px;}
 
@@ -232,6 +238,7 @@ const { title } = Astro.props;
       background:var(--surface-1);
     }
     .side-nav .side-nav-title{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); margin:0 0 10px; padding:0 10px;}
+    .side-nav .side-nav-sep{height:1px; background:var(--border); margin:8px 10px;}
     .side-nav a{
       font-size:11.5px; color:var(--text-secondary); text-decoration:none;
       padding:8px 10px; border-radius:6px; text-transform:uppercase; letter-spacing:.03em;

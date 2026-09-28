@@ -15,6 +15,7 @@ const srcLine = `SAPS source: ${sapsData.meta.source}  -  ${sapsData.meta.file} 
     <a href="#trendCard">National trend</a>
     <a href="#provCard">Province &amp; category</a>
     <div class="side-nav-sep"></div>
+    <a href="#quarterSection">Latest quarter</a>
     <a href="#genderSection">Gender breakdown</a>
     <a href="#stationTable">Station leaderboard</a>
   </nav>
@@ -146,6 +147,41 @@ const srcLine = `SAPS source: ${sapsData.meta.source}  -  ${sapsData.meta.file} 
     <div class="story-section">
       <div class="story-chip">Overview</div>
       <div class="kpi-solo" id="kpiRateBox"></div>
+    </div>
+
+    <div class="story-section" id="quarterSection">
+      <div class="sect-divider">
+        <div class="kicker">SAPS &middot; latest release</div>
+        <h2>Latest quarter update</h2>
+        <div class="cardsub" style="margin-bottom:0;">April-June 2026 vs the same quarter a year earlier, for the same 15 categories shown in "Top crime categories" above. This is a fixed quarterly comparison and isn't affected by the year picker.</div>
+      </div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Latest release</div>
+      <div class="kpi-solo" id="qkpiTotalBox"></div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Latest release</div>
+      <div class="kpi-solo" id="qkpiMoverBox"></div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Latest release</div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>Change by category  -  Apr-Jun 2026 vs Apr-Jun 2025</h2>
+            <div class="cardsub">Sorted by percentage change. Red = increased, green = decreased.</div>
+          </div>
+          <span class="pill" title="This quarter's release isn't broken down by province in the source workbook the same way the annual data is.">Quarterly, national only</span>
+        </div>
+        <div class="chart-wrap">
+          <svg id="quarterSvg" viewBox="0 0 900 420"></svg>
+          <div class="tooltip" id="quarterTip"></div>
+        </div>
+      </div>
     </div>
 
     <div class="story-section" id="genderSection">

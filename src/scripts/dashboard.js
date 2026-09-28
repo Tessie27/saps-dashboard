@@ -1,4 +1,5 @@
 import sapsData from '../data/saps.json';
+import quarterData from '../data/quarter.json';
 import { GENDER } from '../data/gender.js';
 
 const YEARS = sapsData.years;
@@ -172,6 +173,81 @@ function init(d) {
   renderGenderGap();
   renderGenderTrend();
   renderSafety();
+  renderQuarterUpdate();
+}
+
+// Static quarter-over-quarter comparison, unaffected by the year picker or
+// province filter - it's a separate fixed release, not part of the scoped
+// annual trend, so it doesn't hook into applyFilters().
+function renderQuarterUpdate() {
+  const q = quarterData;
+  const withPct = q.categories.map(([label, prev, latest]) => [label, prev, latest, prev ? ((latest - prev) / prev) * 100 : 0]);
+  const up = withPct.slice().sort((a, b) => b[3] - a[3])[0];
+  const down = withPct.slice().sort((a, b) => a[3] - b[3])[0];
+
+  const totalBox = document.getElementById('qkpiTotalBox');
+  if (totalBox) {
+    totalBox.innerHTML = kpiSoloHtml({
+      label: 'Total (these 15 categories), Apr-Jun ' + q.latest_period,
+      value: fmt(q.total_latest),
+      delta: q.pct_change,
+      note: fmt(q.total_prev) + ' in Apr-Jun ' + q.prev_period,
+    });
+  }
+  const moverBox = document.getElementById('qkpiMoverBox');
+  if (moverBox) {
+    moverBox.innerHTML = kpiSoloHtml({
+      label: 'Biggest mover this quarter',
+      value: up[0] + ' (' + fmtPct(up[3]) + ')',
+      note: down[0] + ' fell the most: ' + fmtPct(down[3]),
+    });
+  }
+
+  const svg = document.getElementById('quarterSvg');
+  if (!svg) return;
+  const sorted = withPct.slice().sort((a, b) => b[3] - a[3]);
+  const W = renderWidth(svg, 900);
+  const H = W < MOBILE ? 620 : 420;
+  const M = { t: 10, r: 60, b: 10, l: W < MOBILE ? 150 : 330 };
+  const rowH = (H - M.t - M.b) / sorted.length;
+  const maxAbs = Math.max(...sorted.map((c) => Math.abs(c[3])));
+  const cx = M.l + (W - M.l - M.r) / 2;
+  const halfW = (W - M.l - M.r) / 2;
+  let html = '<line class="baseline" x1="' + cx + '" x2="' + cx + '" y1="' + M.t + '" y2="' + (H - M.b) + '"></line>';
+  sorted.forEach(([label, prev, latest, pct], i) => {
+    const yy = i * rowH;
+    const w = (Math.abs(pct) / maxAbs) * halfW;
+    const isUp = pct > 0;
+    const barX = isUp ? cx : cx - w;
+    const color = isUp ? 'var(--bad)' : 'var(--good)';
+    const labelX = isUp ? cx + w + 6 : cx - w - 6;
+    const anchor = isUp ? 'start' : 'end';
+    html +=
+      '<g class="bar-row" transform="translate(0,' + yy + ')">' +
+      '<text class="bar-label" x="' + (M.l - 8) + '" y="' + (rowH / 2 + 4) + '" text-anchor="end">' + label + '</text>' +
+      '<rect class="bar" x="' + barX.toFixed(1) + '" y="' + rowH * 0.2 + '" width="' + w.toFixed(1) + '" height="' + (rowH * 0.6).toFixed(1) + '" rx="3" fill="' + color + '"></rect>' +
+      '<text class="bar-value" x="' + labelX.toFixed(1) + '" y="' + (rowH / 2 + 4) + '" text-anchor="' + anchor + '">' + fmtPct(pct) + '</text>' +
+      '</g>';
+  });
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  svg.innerHTML = html;
+
+  const tip = document.getElementById('quarterTip');
+  svg.querySelectorAll('.bar-row').forEach((row, i) => {
+    const [label, prev, latest, pct] = sorted[i];
+    row.addEventListener('mousemove', (e) => {
+      const wrap = svg.parentElement.getBoundingClientRect();
+      tip.innerHTML =
+        '<div class="tt-title">' + label + '</div>' +
+        '<div class="tt-row"><span>Apr-Jun ' + q.prev_period + '</span><b style="margin-left:8px;">' + fmt(prev) + '</b></div>' +
+        '<div class="tt-row"><span>Apr-Jun ' + q.latest_period + '</span><b style="margin-left:8px;">' + fmt(latest) + '</b></div>' +
+        '<div class="tt-row"><span>Change</span><b style="margin-left:8px;">' + fmtPct(pct) + '</b></div>';
+      tip.style.left = e.clientX - wrap.left + 12 + 'px';
+      tip.style.top = e.clientY - wrap.top - 10 + 'px';
+      tip.style.opacity = 1;
+    });
+    row.addEventListener('mouseleave', () => (tip.style.opacity = 0));
+  });
 }
 
 function renderKpis(d) {
@@ -956,6 +1032,7 @@ window.addEventListener('resize', () => {
     renderGenderGap();
     drawGenderTrend();
     renderSafety();
+    renderQuarterUpdate();
   }, 200);
 });
 

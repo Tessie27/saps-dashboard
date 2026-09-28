@@ -207,28 +207,52 @@ function renderQuarterUpdate() {
   if (!svg) return;
   const sorted = withPct.slice().sort((a, b) => b[3] - a[3]);
   const W = renderWidth(svg, 900);
-  const H = W < MOBILE ? 620 : 420;
-  const M = { t: 10, r: 60, b: 10, l: W < MOBILE ? 150 : 330 };
-  const rowH = (H - M.t - M.b) / sorted.length;
   const maxAbs = Math.max(...sorted.map((c) => Math.abs(c[3])));
-  const cx = M.l + (W - M.l - M.r) / 2;
-  const halfW = (W - M.l - M.r) / 2;
-  let html = '<line class="baseline" x1="' + cx + '" x2="' + cx + '" y1="' + M.t + '" y2="' + (H - M.b) + '"></line>';
-  sorted.forEach(([label, prev, latest, pct], i) => {
-    const yy = i * rowH;
-    const w = (Math.abs(pct) / maxAbs) * halfW;
-    const isUp = pct > 0;
-    const barX = isUp ? cx : cx - w;
-    const color = isUp ? 'var(--bad)' : 'var(--good)';
-    const labelX = isUp ? cx + w + 6 : cx - w - 6;
-    const anchor = isUp ? 'start' : 'end';
-    html +=
-      '<g class="bar-row" transform="translate(0,' + yy + ')">' +
-      '<text class="bar-label" x="' + (M.l - 8) + '" y="' + (rowH / 2 + 4) + '" text-anchor="end">' + label + '</text>' +
-      '<rect class="bar" x="' + barX.toFixed(1) + '" y="' + rowH * 0.2 + '" width="' + w.toFixed(1) + '" height="' + (rowH * 0.6).toFixed(1) + '" rx="3" fill="' + color + '"></rect>' +
-      '<text class="bar-value" x="' + labelX.toFixed(1) + '" y="' + (rowH / 2 + 4) + '" text-anchor="' + anchor + '">' + fmtPct(pct) + '</text>' +
-      '</g>';
-  });
+  let html = '', H;
+
+  if (W < MOBILE) {
+    // Long category names don't fit beside a diverging bar on a phone-width
+    // screen (same problem renderCategories solves) - stack label above bar,
+    // and drop the center-diverging layout in favor of a simple left-aligned
+    // bar whose length is the magnitude and whose color carries the sign.
+    const rowH = 40;
+    H = rowH * sorted.length;
+    const rightPad = 56;
+    sorted.forEach(([label, prev, latest, pct], i) => {
+      const yy = i * rowH;
+      const barMaxW = W - 8 - rightPad;
+      const w = (Math.abs(pct) / maxAbs) * barMaxW;
+      const color = pct > 0 ? 'var(--bad)' : 'var(--good)';
+      html +=
+        '<g class="bar-row" transform="translate(0,' + yy + ')">' +
+        '<text class="bar-label" style="font-size:10.5px" x="2" y="12" text-anchor="start">' + label + '</text>' +
+        '<rect class="bar" x="2" y="18" width="' + w.toFixed(1) + '" height="10" rx="2" fill="' + color + '"></rect>' +
+        '<text class="bar-value" style="font-size:10px" x="' + (2 + w + 6) + '" y="27">' + fmtPct(pct) + '</text>' +
+        '</g>';
+    });
+  } else {
+    H = 420;
+    const M = { t: 10, r: 60, b: 10, l: 330 };
+    const rowH = (H - M.t - M.b) / sorted.length;
+    const cx = M.l + (W - M.l - M.r) / 2;
+    const halfW = (W - M.l - M.r) / 2;
+    html = '<line class="baseline" x1="' + cx + '" x2="' + cx + '" y1="' + M.t + '" y2="' + (H - M.b) + '"></line>';
+    sorted.forEach(([label, prev, latest, pct], i) => {
+      const yy = i * rowH;
+      const w = (Math.abs(pct) / maxAbs) * halfW;
+      const isUp = pct > 0;
+      const barX = isUp ? cx : cx - w;
+      const color = isUp ? 'var(--bad)' : 'var(--good)';
+      const labelX = isUp ? cx + w + 6 : cx - w - 6;
+      const anchor = isUp ? 'start' : 'end';
+      html +=
+        '<g class="bar-row" transform="translate(0,' + yy + ')">' +
+        '<text class="bar-label" x="' + (M.l - 8) + '" y="' + (rowH / 2 + 4) + '" text-anchor="end">' + label + '</text>' +
+        '<rect class="bar" x="' + barX.toFixed(1) + '" y="' + rowH * 0.2 + '" width="' + w.toFixed(1) + '" height="' + (rowH * 0.6).toFixed(1) + '" rx="3" fill="' + color + '"></rect>' +
+        '<text class="bar-value" x="' + labelX.toFixed(1) + '" y="' + (rowH / 2 + 4) + '" text-anchor="' + anchor + '">' + fmtPct(pct) + '</text>' +
+        '</g>';
+    });
+  }
   svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
   svg.innerHTML = html;
 

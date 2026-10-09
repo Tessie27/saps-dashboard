@@ -64,6 +64,10 @@ const { title } = Astro.props;
   h1{font-size:22px; margin:0 0 6px; letter-spacing:.01em; text-transform:uppercase; font-weight:700;}
   .sub{color:var(--text-secondary); font-size:13.5px; max-width:640px; line-height:1.6;}
   .src{color:var(--text-muted); font-size:11.5px; margin-top:6px; line-height:1.5;}
+  .header-actions{display:flex; flex-wrap:wrap; gap:12px; align-items:center;}
+  .deck-download{display:inline-block; background:var(--series-1); color:#fff; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.03em; text-decoration:none; padding:10px 14px; border-radius:2px;}
+  .deck-download:hover{opacity:.9;}
+  .deck-download:focus-visible{outline:2px solid var(--text-primary); outline-offset:2px;}
   .theme-toggle{display:flex; gap:4px; background:transparent; border:1px solid var(--border); border-radius:2px; padding:3px;}
   .theme-toggle button{border:none; background:transparent; color:var(--text-secondary); font-size:11px; padding:5px 10px; border-radius:1px; cursor:pointer; text-transform:uppercase; letter-spacing:.03em;}
   .theme-toggle button.active{background:var(--series-1); color:#fff;}

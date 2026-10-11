@@ -16,6 +16,7 @@ const srcLine = `SAPS source: ${sapsData.meta.source}  -  ${sapsData.meta.file} 
     <a href="#provCard">Province &amp; category</a>
     <div class="side-nav-sep"></div>
     <a href="#quarterSection">Latest quarter</a>
+    <a href="#mortalitySection">Murder cross-check</a>
     <a href="#genderSection">Gender breakdown</a>
     <a href="#stationTable">Station leaderboard</a>
   </nav>
@@ -153,7 +154,7 @@ const srcLine = `SAPS source: ${sapsData.meta.source}  -  ${sapsData.meta.file} 
       <div class="sect-divider">
         <div class="kicker">SAPS &middot; latest release</div>
         <h2>Latest quarter update</h2>
-        <div class="cardsub" style="margin-bottom:0;">April-June 2026 vs the same quarter a year earlier, for the same 15 categories shown in "Top crime categories" above. This is a fixed quarterly comparison and isn't affected by the year picker.</div>
+        <div class="cardsub" style="margin-bottom:0;">April-June 2026 vs the same quarter a year earlier, using the 17 community-reported serious crimes (the same series as the national trend above). This is a fixed quarterly comparison and isn't affected by the year picker.</div>
       </div>
     </div>
 
@@ -165,6 +166,11 @@ const srcLine = `SAPS source: ${sapsData.meta.source}  -  ${sapsData.meta.file} 
     <div class="story-section">
       <div class="story-chip">Latest release</div>
       <div class="kpi-solo" id="qkpiMoverBox"></div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Latest release</div>
+      <div class="kpi-solo" id="qkpiDetectedBox"></div>
     </div>
 
     <div class="story-section">
@@ -182,6 +188,51 @@ const srcLine = `SAPS source: ${sapsData.meta.source}  -  ${sapsData.meta.file} 
           <div class="tooltip" id="quarterTip"></div>
         </div>
       </div>
+    </div>
+
+    <div class="story-section" id="mortalitySection">
+      <div class="sect-divider">
+        <div class="kicker">Cross-check &middot; SAPS vs Stats SA</div>
+        <h2>Murder in two independent counts</h2>
+        <div class="cardsub" style="margin-bottom:0;">SAPS counts murders reported to the police (financial year 2024/25). Stats SA counts deaths certified as assault from death notification forms (calendar year 2024). They measure the same harm through different systems.</div>
+      </div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Cross-check</div>
+      <div class="kpi-solo" id="mkpiMurdersBox"></div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Cross-check</div>
+      <div class="kpi-solo" id="mkpiDeathsBox"></div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Cross-check</div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>By province: murders vs assault deaths</h2>
+            <div class="cardsub">Sorted by SAPS murders. Different years (2024/25 vs 2024), so compare shape rather than exact counts.</div>
+          </div>
+          <span class="pill" title="Both sources report by province, but they use different definitions and periods.">Not scoped by the filters</span>
+        </div>
+        <div class="chart-wrap">
+          <svg id="mortalitySvg" viewBox="0 0 620 480"></svg>
+          <div class="tooltip" id="mortalityTip"></div>
+        </div>
+        <div class="legend">
+          <span class="li"><span class="sw" style="background:var(--series-1)"></span>SAPS murders, 2024/25</span>
+          <span class="li"><span class="sw" style="background:var(--series-2)"></span>Stats SA assault deaths, 2024</span>
+        </div>
+        <div class="insight">SAPS murders are about 3.3 times the assault deaths in death notifications. Stats SA warns that over three-quarters of non-natural deaths are not precisely classified (most are coded as accidental injury or undetermined), so its assault count is likely an undercount of homicide. Gauteng is the outlier: first for SAPS murders but fourth for assault deaths, about 5.2 times higher in police records against 1.5 to 3.6 times elsewhere.</div>
+      </div>
+    </div>
+
+    <div class="story-section">
+      <div class="story-chip">Cross-check</div>
+      <div class="kpi-solo" id="mkpiWhoBox"></div>
     </div>
 
     <div class="story-section" id="genderSection">

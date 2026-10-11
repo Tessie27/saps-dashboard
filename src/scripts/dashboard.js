@@ -1,5 +1,6 @@
 import sapsData from '../data/saps.json';
 import quarterData from '../data/quarter.json';
+import mortalityData from '../data/mortality.json';
 import { GENDER } from '../data/gender.js';
 
 const YEARS = sapsData.years;
@@ -174,6 +175,7 @@ function init(d) {
   renderGenderTrend();
   renderSafety();
   renderQuarterUpdate();
+  renderMortality();
 }
 
 // Static quarter-over-quarter comparison, unaffected by the year picker or
@@ -182,13 +184,15 @@ function init(d) {
 function renderQuarterUpdate() {
   const q = quarterData;
   const withPct = q.categories.map(([label, prev, latest]) => [label, prev, latest, prev ? ((latest - prev) / prev) * 100 : 0]);
-  const up = withPct.slice().sort((a, b) => b[3] - a[3])[0];
-  const down = withPct.slice().sort((a, b) => a[3] - b[3])[0];
+  // movers are ranked by number of cases, not percentage, so a tiny category
+  // (e.g. arson) can't headline a quarter on a few dozen cases
+  const up = withPct.slice().sort((a, b) => (b[2] - b[1]) - (a[2] - a[1]))[0];
+  const down = withPct.slice().sort((a, b) => (a[2] - a[1]) - (b[2] - b[1]))[0];
 
   const totalBox = document.getElementById('qkpiTotalBox');
   if (totalBox) {
     totalBox.innerHTML = kpiSoloHtml({
-      label: 'Total (these 15 categories), Apr-Jun ' + q.latest_period,
+      label: 'Total (17 community-reported serious crimes), Apr-Jun ' + q.latest_period,
       value: fmt(q.total_latest),
       delta: q.pct_change,
       note: fmt(q.total_prev) + ' in Apr-Jun ' + q.prev_period,
@@ -197,9 +201,21 @@ function renderQuarterUpdate() {
   const moverBox = document.getElementById('qkpiMoverBox');
   if (moverBox) {
     moverBox.innerHTML = kpiSoloHtml({
-      label: 'Biggest mover this quarter',
-      value: up[0] + ' (' + fmtPct(up[3]) + ')',
-      note: down[0] + ' fell the most: ' + fmtPct(down[3]),
+      label: 'Biggest fall in cases this quarter',
+      value: down[0] + ' (' + fmtPct(down[3]) + ')',
+      note: fmt(down[1] - down[2]) + ' fewer cases. Biggest rise: ' + up[0] + ', ' + fmt(up[2] - up[1]) + ' more (' + fmtPct(up[3]) + ').',
+    });
+  }
+  const detectedBox = document.getElementById('qkpiDetectedBox');
+  if (detectedBox) {
+    const dt = q.detected;
+    const dPct = ((dt.latest - dt.prev) / dt.prev) * 100;
+    const items = dt.items.slice(0, 2).map((it) => it[0].replace(' of alcohol or drugs', '') + ' ' + fmtPct(((it[2] - it[1]) / it[1]) * 100)).join(', ');
+    detectedBox.innerHTML = kpiSoloHtml({
+      label: 'Detected by police action (not in the 17), Apr-Jun ' + q.latest_period,
+      value: fmtPct(dPct),
+      cls: dPct > 0 ? 'up' : 'down',
+      note: items + '. Counted separately because it reflects police activity, not only offences.',
     });
   }
 
@@ -231,7 +247,7 @@ function renderQuarterUpdate() {
         '</g>';
     });
   } else {
-    H = 420;
+    H = 470;
     const M = { t: 10, r: 60, b: 10, l: 330 };
     const rowH = (H - M.t - M.b) / sorted.length;
     const cx = M.l + (W - M.l - M.r) / 2;
@@ -841,6 +857,61 @@ function renderGenderGap() {
   });
 }
 
+// Cross-check of two independent counts of violent death. SAPS murders are
+// police records (financial year 2024/25); Stats SA assault deaths (ICD-10
+// X85-Y09) come from death notifications (calendar 2024). Static, so it is
+// not tied to the year picker or province filter.
+function renderMortality() {
+  const m = mortalityData;
+  const set = (id, o) => { const el = document.getElementById(id); if (el) el.innerHTML = kpiSoloHtml(o); };
+  set('mkpiMurdersBox', { label: 'Murders recorded by SAPS, 2024/25', value: fmt(m.saps_murders_2425), note: 'Police records, financial year' });
+  set('mkpiDeathsBox', { label: 'Assault deaths, Stats SA, 2024', value: fmt(m.assault_deaths_2024), note: 'Death notifications (ICD-10 X85-Y09), calendar year. SAPS murders are ' + (m.saps_murders_2425 / m.assault_deaths_2024).toFixed(1) + '× higher.' });
+  const malePct = Math.round((m.assault_deaths_male / m.assault_deaths_2024) * 100);
+  const agePct = Math.round((m.assault_deaths_age_15_44 / m.assault_deaths_2024) * 100);
+  set('mkpiWhoBox', { label: 'Who dies from assault', value: malePct + '% men', note: fmt(m.assault_deaths_male) + ' men vs ' + fmt(m.assault_deaths_female) + ' women. ' + agePct + '% were aged 15 to 44.' });
+
+  const svg = document.getElementById('mortalitySvg');
+  if (!svg) return;
+  const list = m.provinces;
+  const W = renderWidth(svg, 620), H = 480, M = { t: 8, r: 64, b: 8, l: W < MOBILE ? 96 : 130 };
+  const labelFontPx = W < MOBILE ? 10 : 11.5;
+  const rowH = (H - M.t - M.b) / list.length;
+  const max = Math.max(...list.map((p) => p.saps_murders));
+  const bw = (v) => (v / max) * (W - M.l - M.r);
+  let html = '';
+  list.forEach((p, i) => {
+    const barH = rowH * 0.32;
+    const ws = bw(p.saps_murders), wd = bw(p.assault_deaths);
+    html +=
+      '<g transform="translate(0,' + (M.t + i * rowH) + ')">' +
+      '<text class="bar-label" style="font-size:' + labelFontPx + 'px" x="' + (M.l - 8) + '" y="' + (rowH / 2 + 4) + '" text-anchor="end">' + p.province + '</text>' +
+      '<rect x="' + M.l + '" y="' + rowH * 0.1 + '" width="' + ws.toFixed(1) + '" height="' + barH.toFixed(1) + '" rx="3" fill="var(--series-1)"></rect>' +
+      '<text class="bar-value" x="' + (M.l + ws + 6) + '" y="' + (rowH * 0.1 + barH * 0.75) + '">' + fmt(p.saps_murders) + '</text>' +
+      '<rect x="' + M.l + '" y="' + (rowH * 0.1 + barH + 4) + '" width="' + wd.toFixed(1) + '" height="' + barH.toFixed(1) + '" rx="3" fill="var(--series-2)"></rect>' +
+      '<text class="bar-value" x="' + (M.l + wd + 6) + '" y="' + (rowH * 0.1 + barH + 4 + barH * 0.75) + '">' + fmt(p.assault_deaths) + '</text>' +
+      '</g>';
+  });
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  svg.innerHTML = html;
+
+  const tip = document.getElementById('mortalityTip');
+  svg.querySelectorAll('g').forEach((row, i) => {
+    const p = list[i];
+    row.addEventListener('mousemove', (e) => {
+      const wrap = svg.parentElement.getBoundingClientRect();
+      tip.innerHTML =
+        '<div class="tt-title">' + p.province + '</div>' +
+        '<div class="tt-row"><span>SAPS murders</span><b style="margin-left:8px;">' + fmt(p.saps_murders) + '</b></div>' +
+        '<div class="tt-row"><span>Assault deaths</span><b style="margin-left:8px;">' + fmt(p.assault_deaths) + '</b></div>' +
+        '<div class="tt-row"><span>Ratio</span><b style="margin-left:8px;">' + (p.saps_murders / p.assault_deaths).toFixed(1) + '×</b></div>';
+      tip.style.left = e.clientX - wrap.left + 12 + 'px';
+      tip.style.top = e.clientY - wrap.top - 10 + 'px';
+      tip.style.opacity = 1;
+    });
+    row.addEventListener('mouseleave', () => (tip.style.opacity = 0));
+  });
+}
+
 function renderDualLine(svgId, tipId, years, maleArr, femaleArr, unit, opts = {}) {
   const svg = document.getElementById(svgId);
   const W = renderWidth(svg, 520), H = opts.h || 260, M = { t: opts.title ? 26 : 16, r: 28, b: 28, l: 44 };
@@ -1057,6 +1128,7 @@ window.addEventListener('resize', () => {
     drawGenderTrend();
     renderSafety();
     renderQuarterUpdate();
+    renderMortality();
   }, 200);
 });
 

@@ -1,0 +1,66 @@
+{
+ "saps_murders_2425": 24692,
+ "assault_deaths_2024": 7486,
+ "assault_deaths_male": 6693,
+ "assault_deaths_female": 770,
+ "assault_deaths_age_15_44": 6284,
+ "all_deaths_2024": 474366,
+ "non_natural_deaths_2024": 62871,
+ "other_external_share_pct": 74.9,
+ "provinces": [
+  {
+   "province": "Gauteng",
+   "saps_murders": 5959,
+   "assault_deaths": 1148,
+   "assault_share_nonnatural": 8.0
+  },
+  {
+   "province": "KwaZulu-Natal",
+   "saps_murders": 5390,
+   "assault_deaths": 1499,
+   "assault_share_nonnatural": 11.5
+  },
+  {
+   "province": "Eastern Cape",
+   "saps_murders": 4691,
+   "assault_deaths": 1799,
+   "assault_share_nonnatural": 16.3
+  },
+  {
+   "province": "Western Cape",
+   "saps_murders": 4369,
+   "assault_deaths": 1350,
+   "assault_share_nonnatural": 17.5
+  },
+  {
+   "province": "Mpumalanga",
+   "saps_murders": 1209,
+   "assault_deaths": 357,
+   "assault_share_nonnatural": 9.0
+  },
+  {
+   "province": "North West",
+   "saps_murders": 1066,
+   "assault_deaths": 346,
+   "assault_share_nonnatural": 9.6
+  },
+  {
+   "province": "Free State",
+   "saps_murders": 857,
+   "assault_deaths": 408,
+   "assault_share_nonnatural": 12.8
+  },
+  {
+   "province": "Limpopo",
+   "saps_murders": 786,
+   "assault_deaths": 330,
+   "assault_share_nonnatural": 7.7
+  },
+  {
+   "province": "Northern Cape",
+   "saps_murders": 365,
+   "assault_deaths": 243,
+   "assault_share_nonnatural": 15.4
+  }
+ ]
+}

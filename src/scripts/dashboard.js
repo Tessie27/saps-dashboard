@@ -354,7 +354,7 @@ function renderGenderKpis() {
   const kpis = [
     { id: 'gkpiAssaultBox', label: 'Individual assault, 2025/26', value: '2.5×', note: '293,000 men vs 115,000 women assaulted' },
     { id: 'gkpiHousebreakBox', label: 'Housebreaking, 2025/26', value: '1.4×', note: '632,000 vs 446,000 households, by sex of head' },
-    { id: 'gkpiPartnerBox', label: 'Assault by a partner', value: '31% vs 2%', note: 'women vs men naming a spouse/partner as attacker' },
+    { id: 'gkpiPartnerBox', label: 'Assaults by a partner', value: '31% vs 2%', note: 'of assaults on women vs on men were by a spouse or partner' },
     { id: 'gkpiUnsafeBox', label: 'Unsafe alone after dark', value: '45% vs 39%', note: 'women vs men who feel "very unsafe", 2025/26' },
   ];
   kpis.forEach((k) => {
